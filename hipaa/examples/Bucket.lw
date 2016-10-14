@@ -1,0 +1,8 @@
+import Fugue.HIPAA.AWS as AWS
+import Fugue.HIPAA.AWS.S3 as S3
+
+bucket: S3.Bucket.new {
+  name: "demo-protected-bucket",
+  region: AWS.Us-east-1,
+  sseKeyManagement: S3.Bucket.SSE-KMS,
+}

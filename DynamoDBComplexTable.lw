@@ -1,0 +1,66 @@
+composition
+
+import Fugue.Core.AWS.Common as AWS
+import Fugue.AWS.DynamoDB as DynamoDB
+
+example-demo-table: DynamoDB.Table.new {
+  name: "example-demo-table",
+  region: AWS.Us-west-2,
+  attributes: {
+    "A": DynamoDB.S,
+    "B": DynamoDB.S,
+    "C": DynamoDB.S,
+    "D": DynamoDB.S
+  },
+  schema: {
+    "A": DynamoDB.HASH,
+    "B": DynamoDB.RANGE
+  },
+  provisionedThroughput: {
+    read: 1,
+    write: 1
+  },
+  localSecondaryIndexes: {
+    "lsiC": {
+      schema: {
+        "A": DynamoDB.HASH,
+        "C": DynamoDB.RANGE
+      },
+      projection: DynamoDB.Projection {
+        projectionType: DynamoDB.INCLUDE,
+        nonKeyAttributes: [ "B" ]
+      }
+    }
+  },
+  globalSecondaryIndexes: {
+    "gsiC": {
+      schema: {
+        "A": DynamoDB.HASH,
+        "C": DynamoDB.RANGE
+      },
+      projection: DynamoDB.Projection {
+        projectionType: DynamoDB.ALL,
+        nonKeyAttributes: None
+      },
+      provisionedThroughput: {
+        read: 1,
+        write: 1
+      }
+    },
+    "gsiD": {
+      schema: {
+        "A": DynamoDB.HASH,
+        "D": DynamoDB.RANGE
+      },
+      projection: DynamoDB.Projection {
+        projectionType: DynamoDB.ALL,
+        nonKeyAttributes: None
+      },
+      provisionedThroughput: {
+        read: 1,
+        write: 1
+      }
+    }
+  },
+  streamViewType: DynamoDB.NewImageView
+}

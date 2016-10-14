@@ -1,0 +1,161 @@
+composition
+
+import Fugue.AWS.AutoScaling as AutoScaling
+import Fugue.AWS.DynamoDB as DynamoDB
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS.ELB as ELB
+import Fugue.AWS.IAM as IAM
+import Fugue.AWS.Pattern.Network as Network
+import Fugue.Core.AWS.Common as AWS
+
+# Region
+demo-app-region: AWS.Us-west-2
+
+# Network (VPC)
+demo-app-network: Network.new {
+  name: "demo-app-network",
+  region: demo-app-region,
+  cidr: "10.0.0.0/16",
+  publicSubnets: [
+    (AWS.A, "10.0.1.0/24"),
+    (AWS.B, "10.0.2.0/24"),
+  ],
+  privateSubnets: [],
+}
+
+# DYNAMODB TABLE
+# demo-app-table: DynamoDB.Table.new(DynamoDB.Table.default with {
+#   name: "demo-app-table",
+#   attributes: {"PropertyName": DynamoDB.S},
+#   schema: {"PropertyName": DynamoDB.HASH},
+#   provisionedThroughput: {
+#     read: 10,
+#     write: 10,
+#   },
+#   region: demo-app-region,
+# })
+
+
+# Tags
+demo-app-tag: AWS.Tag({
+  key: 'Application',
+  value: 'Fugue App'
+})
+
+# AUTOSCALING GROUP
+demo-app-asg: AutoScaling.AutoScalingGroup.new(
+  AutoScaling.AutoScalingGroup.default with {
+    subnets: demo-app-network.publicSubnets,
+    loadBalancers: [demo-app-elb],
+    minSize: 4,
+    maxSize: 4,
+    launchConfiguration: demo-app-lc,
+    tags: [demo-app-tag],
+    terminationPolicies: [AutoScaling.ClosestToNextInstanceHour],
+    enabledMetrics: [
+      AutoScaling.GroupInServiceInstances,
+      AutoScaling.GroupTotalInstances
+    ]
+})
+
+
+
+### ASG LAUNCH CONFIG
+demo-app-lc: AutoScaling.LaunchConfiguration.new(
+  AutoScaling.LaunchConfiguration.default with {
+    image: "ami-b7b366d7",
+    securityGroups: [demo-app-web-sg],
+    instanceType: EC2.T2_micro,
+    associatePublicIpAddress: True,
+    iamInstanceProfile: demo-app-instance-profile
+})
+
+
+### IAM Role
+demo-app-role: IAM.Role.new {
+  roleName: 'demo-role',
+  assumeRolePolicyDocument: IAM.Policy.AssumeRole.ec2,
+  rolePolicies: [demo-app-role-policy]
+}
+
+demo-app-instance-profile: IAM.InstanceProfile.new {
+  instanceProfileName: 'demo-instance-profile',
+  roles: [demo-app-role]
+}
+
+demo-app-role-policy: IAM.Policy.new {
+  policyName: 'ddb-full',
+  policyDocument: ddb-policy-document
+}
+
+# LOAD BALANCER
+demo-app-elb: ELB.LoadBalancer.new(ELB.LoadBalancer.default with {
+  loadBalancerName: "demo-app-elb",
+  subnets: demo-app-network.publicSubnets,
+  healthCheck: ELB.HealthCheck({
+    target: "TCP:3000",
+    interval: 15,
+    timeout: 3,
+    unhealthyThreshold: 3,
+    healthyThreshold: 3
+  }),
+  securityGroups: [demo-app-elb-sg],
+  listeners: [demo-app-listener],
+  tags: [demo-app-tag],
+})
+
+
+### LISTENER
+demo-app-listener: ELB.Listener.new(ELB.Listener.default with {
+  protocol: ELB.HTTP,
+  loadBalancerPort: 80,
+  instancePort: 3000
+})
+
+
+# ELB SG
+demo-app-elb-sg: EC2.SecurityGroup({
+  description: "Allow http/s traffic from the Internet",
+  ipPermissions: [elbHTTPS, elbHTTP],
+  ipPermissionsEgress: None,
+  tags: [demo-app-tag],
+  vpc: demo-app-network.vpc
+})
+
+elbHTTP: EC2.IpPermission({
+  ipProtocol: "tcp",
+  fromPort: 80,
+  toPort: 80,
+  prefixLists: None,
+  target: internetCIDR
+})
+
+elbHTTPS: EC2.IpPermission({
+  ipProtocol: "tcp",
+  fromPort: 443,
+  toPort: 443,
+  prefixLists: None,
+  target: internetCIDR
+})
+
+# WEB SG
+demo-app-web-sg: EC2.SecurityGroup.new({
+  description: "Allow http traffic from the ELB SG",
+  ipPermissions: [webHTTP],
+  ipPermissionsEgress: None,
+  tags: [demo-app-tag],
+  vpc: demo-app-network.vpc
+})
+
+webHTTP: EC2.IpPermission({
+  ipProtocol: "tcp",
+  fromPort: 3000,
+  toPort: 3000,
+  prefixLists: None,
+  target: EC2.SecurityGroups([demo-app-elb-sg])
+})
+
+# CONVENIENCE / CLARITY
+internetCIDR: EC2.IpRanges([EC2.IpRange(cidrIp: "0.0.0.0/0")])
+
+ddb-policy-document: '{"Version": "2012-10-17", "Statement": [ { "Action": [ "dynamodb:*" ], "Effect": "Allow", "Resource": "*" }]}'

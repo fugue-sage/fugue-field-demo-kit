@@ -1,0 +1,137 @@
+composition 
+
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.AWS.IAM as IAM
+import Fugue.AWS.ELB as ELB
+import Ludwig.External as External
+
+#########################
+# LOAD BALANCER
+#########################
+example-demo-elb: ELB.LoadBalancer.new(ELB.LoadBalancer.default with {
+  loadBalancerName: "example-elb-elb",
+  scheme: ELB.Internal,
+  subnets: [
+    public-10-0-1-0,
+    public-10-0-2-0
+  ],
+  healthCheck: ELB.HealthCheck.tcp {
+    port: 3000,
+    interval: 15,
+    timeout: 3,
+    unhealthyThreshold: 3,
+    healthyThreshold: 3
+  },
+  securityGroups: [example-elb-sg],
+  listeners: [example-demo-listener],
+  tags: [example-app-tag]
+})
+
+#########################
+### SSL Cert
+#########################
+server-cert: IAM.ServerCertificate.external(
+  "arn:aws:iam::YOURACCOUNTNUMBER:server-certificate/YOURCERTIFICATEARN"
+)
+
+#########################
+### LISTENER
+#########################
+example-demo-listener: ELB.Listener.new {
+  protocol: ELB.HTTPS,
+  loadBalancerPort: 443,
+  instanceProtocol: ELB.HTTP,
+  instancePort: 3000,
+  serverCertificate: server-cert
+}
+
+#########################
+# NETWORKS
+#########################
+example-demo-vpc: EC2.Vpc({
+  cidrBlock: "10.0.0.0/16",
+  tags: [example-app-tag],
+  instanceTenancy: EC2.DefaultTenancy,
+  region: AWS.Us-west-2,
+  dhcpOptions: None
+})
+
+public-10-0-1-0: EC2.Subnet({
+  cidrBlock: '10.0.1.0/24',
+  vpc: example-demo-vpc,
+  availabilityZone: AWS.A,
+  mapPublicIpOnLaunch: True,
+  defaultForAz: False,
+  tags: [example-app-tag]
+})
+
+public-10-0-2-0: EC2.Subnet({
+  cidrBlock: '10.0.2.0/24',
+  vpc: example-demo-vpc,
+  availabilityZone: AWS.B,
+  mapPublicIpOnLaunch: True,
+  defaultForAz: False,
+  tags: [example-app-tag]
+})
+
+#########################
+# ELB SG
+#########################
+example-elb-sg: EC2.SecurityGroup({
+  description: "Allow http/s traffic from the Internet",
+  ipPermissions: [
+    elbHTTP,
+    elbHTTPS
+  ],
+  ipPermissionsEgress: None,
+  tags: [example-app-tag],
+  vpc: example-demo-vpc
+})
+
+elbHTTP: EC2.IpPermission({
+  ipProtocol: "tcp",
+  fromPort: 80,
+  toPort: 80,
+  prefixLists: None,
+  target: EC2.IpRanges([internetCIDR])
+})
+
+elbHTTPS: EC2.IpPermission({
+  ipProtocol: "tcp",
+  fromPort: 443,
+  toPort: 443,
+  prefixLists: None,
+  target: EC2.IpRanges([internetCIDR])
+})
+
+#########################
+# WEB SG
+#########################
+example-web-sg: EC2.SecurityGroup({
+  description: "Allow http traffic from the ELB SG",
+  ipPermissions: [webHTTP],
+  ipPermissionsEgress: None,
+  tags: [example-app-tag],
+  vpc: example-demo-vpc
+})
+
+webHTTP: EC2.IpPermission({
+  ipProtocol: "tcp",
+  fromPort: 3000,
+  toPort: 3000,
+  prefixLists: None,
+  target: EC2.SecurityGroups([example-elb-sg])
+})
+
+
+#########################
+# CONVENIENCE / CLARITY
+#########################
+# CidrIpTarget for internet, probably should go in a lib
+internetCIDR: EC2.IpRange(cidrIp: "0.0.0.0/0")
+
+example-app-tag: AWS.Tag({
+  key: 'Application',
+  value: 'SKO Demo App'
+})
