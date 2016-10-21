@@ -46,7 +46,7 @@ web-app-tag: AWS.Tag({
 web-server-asg: AutoScaling.AutoScalingGroup.new(
   AutoScaling.AutoScalingGroup.default with {
     subnets: web-app-network.publicSubnets,
-    loadBalancers: [web-server-elb],
+    loadBalancers: [web-facing-elb],
     minSize: 4,
     maxSize: 8,
     launchConfiguration: web-server-lc,
@@ -89,8 +89,8 @@ demo-app-role-policy: IAM.Policy.new {
 }
 
 # LOAD BALANCER
-web-server-elb: ELB.LoadBalancer.new(ELB.LoadBalancer.default with {
-  loadBalancerName: "web-server-elb",
+web-facing-elb: ELB.LoadBalancer.new(ELB.LoadBalancer.default with {
+  loadBalancerName: "web-facing-elb",
   subnets: web-app-network.publicSubnets,
   healthCheck: ELB.HealthCheck({
     target: "TCP:3000",
