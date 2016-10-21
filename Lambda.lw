@@ -8,7 +8,7 @@ import Ludwig.Bytes as Bytes
 #########################
 # Lambda
 #########################
-example-lambda-function: Lambda.Function {
+lambda-function: Lambda.Function {
   functionName: 'example-function',
   runtime: Lambda.Nodejs4_3,
   role: lambda-role,
