@@ -24,8 +24,8 @@ web-app-network: Network.new {
 }
 
 # DYNAMODB TABLE
-# circles-table: DynamoDB.Table.new(DynamoDB.Table.default with {
-#   name: "circles-table",
+# demo-app-table: DynamoDB.Table.new(DynamoDB.Table.default with {
+#   name: "demo-app-table",
 #   attributes: {"PropertyName": DynamoDB.S},
 #   schema: {"PropertyName": DynamoDB.HASH},
 #   provisionedThroughput: {
