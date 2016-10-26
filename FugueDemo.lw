@@ -48,7 +48,7 @@ web-server-asg: AutoScaling.AutoScalingGroup.new(
     subnets: web-app-network.publicSubnets,
     loadBalancers: [web-facing-elb],
     minSize: 4,
-    maxSize: 8,
+    maxSize: 4,
     launchConfiguration: web-server-lc,
     tags: [web-app-tag],
     terminationPolicies: [AutoScaling.ClosestToNextInstanceHour],
