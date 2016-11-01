@@ -1,0 +1,55 @@
+# This is the preferred interface for making CloudFront ViewerCertificates
+# with Fugue. If you want to manage an CloudFront ViewerCertificates with 
+# Fugue, the `new` function is the right place to start.
+
+export
+  new
+
+import Fugue.AWS.Internal.Validation as V
+import Fugue.Core.AWS.CloudFront as CF
+import Fugue.Core.AWS.S3 as S3
+
+# `new` CloudFront ViewerCertificate (Constructor)
+#
+# Call this constructor to create a new 
+# Fugue.Core.AWS.CloudFront.ViewerCertificate value.
+#
+# @arg cloudFrontDefaultCertificate  If you want viewers to use HTTPS to request
+# your objects and you're using the CloudFront domain name of your distribution 
+# in your object URLs, set to true. 
+#
+# @arg sslSupportMethod A CloudFront.SSLSupportMethod value that specifies 
+# how you want CloudFront to serve HTTPS requests. 
+# 
+# @arg minimumProtocolVersion A CloudFront.MinimumProtocolVersion value that 
+# specifies the minimum version of the SSL protocol 
+# that you want CloudFront to use, SSLv3 or TLSv1, for HTTPS connections. 
+# CloudFront will serve your objects only to browsers or devices that support at 
+# least the SSL version that you specify. 
+#
+# @arg acmCertificate A CloudFront.AcmCertificate value that points to an 
+# external ACM Certificate
+#
+# @arg iamCertificate A CloudFront.IAMCertificate value that points to an 
+# external IAM Certificate
+#
+# @return a Fugue.Core.AWS.CloudFront.ViewerCertificate value.
+fun new {
+      cloudFrontDefaultCertificate: Optional<Bool>,
+      sslSupportMethod: Optional<CF.SSLSupportMethod>,
+      minimumProtocolVersion: Optional<CF.MinimumProtocolVersion>,
+      acmCertificate: Optional<CF.AcmCertificate>,
+      iamCertificate: Optional<CF.IAMCertificate>
+    } -> CF.ViewerCertificate:
+  let valid: V.concat [
+    V.Success
+  ]
+  case valid of 
+    | V.Success -> CF.ViewerCertificate {
+        cloudFrontDefaultCertificate: cloudFrontDefaultCertificate,
+        sslSupportMethod: sslSupportMethod,
+        minimumProtocolVersion: minimumProtocolVersion,
+        acmCertificate: acmCertificate,
+        iamCertificate: iamCertificate,
+      }
+    | V.Fail err -> error("Invalid ViewerCertificate: " ++ err)

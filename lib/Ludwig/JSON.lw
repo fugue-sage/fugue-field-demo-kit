@@ -1,0 +1,11 @@
+@language("no-prelude")
+
+type JSON:
+    | Object Dictionary<JSON>
+    | Array List<JSON>
+    | String String
+    | Number Float
+    | Bool Bool
+    | Null
+
+fun stringify(j: JSON) -> String: __Ludwig_JSON_stringify(j)

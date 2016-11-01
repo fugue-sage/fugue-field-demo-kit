@@ -1,0 +1,51 @@
+# This is the preferred interface for making S3 WebsiteConfigurations
+# with Fugue. If you want to manage an S3 WebsiteConfiguration with 
+# Fugue, the `new` function is the right place to start.
+
+export 
+  new
+
+import Fugue.AWS.Internal.Validation as V
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.S3 as S3
+
+# `new` S3 WebsiteConfiguration (Constructor)
+#
+# Call this constructor to create a new 
+# Fugue.Core.AWS.S3.WebsiteConfiguration value.
+#
+# @arg routingRules an Optional<List> of S3.RoutingRule values that define the
+# routing rules used in this website configuration
+#
+# @arg errorDocumentKey a String that defines the S3 key that should be 
+# served when an error occurs 
+#
+# @arg indexDocumentSuffix a String that defines the suffix of the index 
+# document for this website
+#
+# @arg redirectAllRequestsToHostName an Optional<String> that defines a hostname 
+# that all requests should be directed to
+#
+# @arg redirectProtocol an Optional<S3.Protocol> value that defines the Protocol
+# redirects should be made over
+#
+# @return a Fugue.Core.AWS.S3.WebsiteConfiguration value.
+fun new{
+  routingRules: Optional<List<S3.RoutingRule>>,
+  errorDocumentKey: String,
+  indexDocumentSuffix: String,
+  redirectAllRequestsToHostName: Optional<String>,
+  redirectProtocol: Optional<S3.Protocol>  
+} -> S3.WebsiteConfiguration:
+  let valid: V.concat[
+    V.Success
+  ]
+  case valid of
+    | V.Success -> S3.WebsiteConfiguration{
+        routingRules: routingRules,
+        errorDocumentKey: errorDocumentKey,
+        indexDocumentSuffix: indexDocumentSuffix,
+        redirectAllRequestsToHostName: redirectAllRequestsToHostName,
+        redirectProtocol: redirectProtocol
+      }
+    | V.Fail err -> error("Invalid WebsiteConfiguration: " ++ err)

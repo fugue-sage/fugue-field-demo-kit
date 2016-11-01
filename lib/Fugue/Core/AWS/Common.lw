@@ -1,0 +1,57 @@
+
+# Region
+#
+# @constructor Ap-northeast-1 Asia Pacific (Tokyo)
+# @constructor Ap-northeast-1 Asia Pacific (Seoul)
+# @constructor Ap-southeast-1 Asia Pacific (Singapore)
+# @constructor Ap-southeast-2 Asia Pacific (Sydney)
+# @constructor Ap-south-1 Asia Pacific (Mumbai)
+# @constructor Cn-north-1 China (Beijing)
+# @constructor Eu-central-1 EU (Frankfurt)
+# @constructor Eu-west-1 EU (Ireland)
+# @constructor Sa-east-1 South America (Sao Paulo)
+# @constructor Us-east-1 US East (N. Virginia)
+# @constructor Us-gov-west-1 AWS GovCloud (US)
+# @constructor Us-west-1 US West (N. California)
+# @constructor Us-west-2 US West (Oregon)
+type Region:
+  | Ap-northeast-1
+  | Ap-northeast-2
+  | Ap-southeast-1
+  | Ap-southeast-2
+  | Eu-central-1 @proto(5)
+  | Eu-west-1 @proto(6)
+  | Sa-east-1 @proto(7)
+  | Us-east-1 @proto(8)
+  | Us-west-1 @proto(10)
+  | Us-west-2 @proto(11)
+  | Ap-south-1 @proto(12)
+
+type AvailabilityZone:
+  | A
+  | B
+  | C
+  | D
+  | E
+
+# Tag
+#
+# @constructor Tag
+#
+# @field key The name of the Tag. Keys are limited to 128 characters
+# and must not start with "aws:".
+#
+# @field value The value of the Tag. Values are limited to 255
+# characters.
+type Tag:
+  | Tag
+      key: String
+      value: String
+
+type ExternalOnly:
+  | ExternalOnly
+      value: String
+
+type NotImplemented:
+  | NotImplemented
+      value: String

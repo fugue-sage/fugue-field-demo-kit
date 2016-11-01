@@ -1,0 +1,44 @@
+import Fugue.Core.AWS.Common as .
+import Fugue.Core.AWS.EC2 as .
+import Fugue.Core.AWS.IAM as .
+
+type HealthCheck:
+  | HealthCheck 
+      target: String
+      interval: Int
+      timeout: Int
+      unhealthyThreshold: Int
+      healthyThreshold: Int
+    
+
+type Listener:
+  | Listener 
+      protocol: Protocol
+      loadBalancerPort: Int
+      instanceProtocol: Optional<Protocol>
+      instancePort: Int
+      serverCertificate: Optional<ServerCertificate>
+    
+
+type LoadBalancer:
+  | LoadBalancer 
+      loadBalancerName: String
+      subnets: List<Subnet>
+      instances: Optional<List<Instance>>
+      healthCheck: Optional<HealthCheck>
+      securityGroups: Optional<List<SecurityGroup>>
+      scheme: Optional<LoadBalancerScheme>
+      listeners: List<Listener>
+      tags: Optional<List<Tag>>
+    
+
+type LoadBalancerScheme:
+  | InternetFacing
+  | Internal
+
+type Protocol:
+  | HTTP
+  | HTTPS
+  | TCP
+  | SSL
+

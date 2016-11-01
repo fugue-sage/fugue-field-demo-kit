@@ -1,0 +1,20 @@
+export
+  type EC2.NetBiosNodeType
+  equal
+
+import Fugue.Core.AWS.EC2 as EC2
+
+# Netbios Node Type Equality Test
+#
+# @arg this The first NetbiosNodeType to compare.
+#
+# @arg that The second NetBiosNodeType to compare.
+#
+# @return The result of the comparison.
+fun equal(this: EC2.NetBiosNodeType, that: EC2.NetBiosNodeType) -> Bool:
+  case (this, that) of
+    | (EC2.BNode, EC2.BNode) -> True
+    | (EC2.HNode, EC2.HNode) -> True
+    | (EC2.MNode, EC2.MNode) -> True
+    | (EC2.PNode, EC2.PNode) -> True
+    | _                      -> False

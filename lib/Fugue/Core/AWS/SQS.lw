@@ -1,0 +1,22 @@
+import Fugue.Core.AWS.Common as .
+import Fugue.Core.AWS.EC2 as .
+
+type Queue:
+  | Queue 
+      queueName: String
+      region: Region
+      delaySeconds: Optional<Int>
+      maximumMessageSize: Optional<Int>
+      messageRetentionPeriod: Optional<Int>
+      policy: Optional<String>
+      receiveMessageWaitTimeSeconds: Optional<Int>
+      redrivePolicy: Optional<RedrivePolicy>
+      visibilityTimeout: Optional<Int>
+    
+
+type RedrivePolicy:
+  | RedrivePolicy 
+      maxReceiveNumber: Optional<Int>
+      deadLetterTarget: Optional<Queue>
+    
+

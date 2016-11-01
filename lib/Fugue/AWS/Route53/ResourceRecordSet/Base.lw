@@ -1,0 +1,23 @@
+export
+  new
+
+import Fugue.Core.AWS.Route53 as Route53
+import Ludwig.External as E
+
+fun toRR(resource: String) -> Route53.ResourceRecord:
+  Route53.ResourceRecord {value: resource}
+
+fun new {
+      name: String,
+      recordType: Route53.ResourceRecordSetType,
+      resourceRecords: List<String>,
+      ttl: Int,
+      hostedZone: Route53.HostedZone
+    } -> Route53.ResourceRecordSet:
+  Route53.ResourceRecordSet {
+    name: name,
+    type: recordType,
+    resourceRecords: List.map(toRR, resourceRecords),
+    ttl: ttl,
+    hostedZone: hostedZone,
+  }

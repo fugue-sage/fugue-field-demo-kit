@@ -1,0 +1,18 @@
+import Fugue.AWS.Region as Region
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.RDS as RDS
+import Ludwig.External as External
+
+# Create a reference to an externally managed DBCluster.
+#
+# Example usage:
+#
+#     cluster: RDS.DBCluster.external("myParameters", AWS.Us-east-1)
+#
+# @arg name The name of the target DBCluster.
+#
+# @arg region The Region containing the target DBCluster
+#
+# @return A reference to the specified DBCluster.
+fun external(name: String, region: AWS.Region) -> RDS.DBCluster:
+  External.external {value: name, namespace: Region.toString(region)}

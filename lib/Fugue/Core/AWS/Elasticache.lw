@@ -1,0 +1,62 @@
+import Fugue.Core.AWS.Common as .
+import Fugue.Core.AWS.EC2 as .
+
+type CacheCluster:
+  | CacheCluster 
+      cacheNodeType: CacheNodeType
+      engine: EngineType
+      numCacheNodes: Optional<Int>
+      securityGroups: Optional<List<SecurityGroup>>
+      clusterName: Optional<String>
+      port: Optional<Int>
+      tags: Optional<List<Tag>>
+      cacheSubnetGroup: CacheSubnetGroup
+    
+
+type EngineType:
+  | Redis
+  | Memcached
+
+type CacheNodeType:
+  | Cache_t2_micro
+  | Cache_t2_small
+  | Cache_t2_medium
+  | Cache_m3_medium
+  | Cache_m3_large
+  | Cache_m3_xlarge
+  | Cache_m3_2xlarge
+  | Cache_t1_micro
+  | Cache_m1_small
+  | Cache_m1_medium
+  | Cache_m1_large
+  | Cache_m1_xlarge
+  | Cache_c1_xlarge
+  | Cache_r3_large
+  | Cache_r3_xlarge
+  | Cache_r3_2xlarge
+  | Cache_r3_4xlarge
+  | Cache_r3_8xlarge
+  | Cache_m2_xlarge
+  | Cache_m2_2xlarge
+  | Cache_m2_4xlarge
+
+type ReplicationGroup:
+  | ReplicationGroup 
+      replicationGroupDescription: String
+      numCacheClusters: Optional<Int>
+      cacheNodeType: CacheNodeType
+      engine: EngineType
+      securityGroups: Optional<List<SecurityGroup>>
+      tags: Optional<List<Tag>>
+      port: Optional<Int>
+      replicationGroupName: Optional<String>
+      cacheSubnetGroup: CacheSubnetGroup
+    
+
+type CacheSubnetGroup:
+  | CacheSubnetGroup 
+      cacheSubnetGroupName: String
+      cacheSubnetGroupDescription: String
+      subnets: List<Subnet>
+    
+

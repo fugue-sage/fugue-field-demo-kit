@@ -1,0 +1,40 @@
+# This is the preferred interface for making VPC NAT Gateways with
+# Fugue. The `new` function is the right place to start.
+
+export
+  type Spec
+  new
+
+import Fugue.Core.AWS.EC2 as EC2
+
+# `new` NAT Gateway (Constructor)
+#
+# Call this constructor to create a new Fugue.Core.AWS.EC2.NatGateway
+# value.
+#
+# Example usage:
+#
+#     EC2.NatGateway.new {
+#       subnet: public-10-0-1-0,
+#       elasticIP: mvc-eip
+#     }
+#     
+#     mvc-eip: EC2.ElasticIP.new {
+#       region: AWS.Us-west-2
+#     }
+#
+# @arg spec A NAT Gateway specification record.
+#
+# @return A Fugue.Core.AWS.EC2.ElasticIP value.
+fun new(spec: Spec) -> EC2.NatGateway: EC2.NatGateway(spec)
+
+# NAT Gateway Specification (Resource)
+#
+# @field subnet The subnet in which to place the NAT Gateway.
+#
+# @field elasticIP The Elastic IP to assign to the NAT Gateway.
+type Spec:
+  subnet: EC2.Subnet
+  elasticIP: EC2.ElasticIP
+
+

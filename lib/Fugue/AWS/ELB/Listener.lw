@@ -1,0 +1,96 @@
+# This is the preferred interface for creating ELB Listeners with
+# Fugue. The `new` function is the best place to start.
+
+export
+  default
+  new
+  type ListenerSpec
+
+import Fugue.AWS.Internal.Validation as .
+import Fugue.Core.AWS.ELB as ELB
+import Fugue.Core.AWS.IAM as IAM
+
+# `new` ELB Listener (Constructor)
+#
+# Call this constructor to create a new
+# Fugue.Core.AWS.ELB.Listener value.
+#
+# Example usage:
+#
+#     ELB.Listener.new {
+#       protocol: ELB.HTTP,
+#       loadBalancerPort: 80,
+#       instanceProtocol: ELB.HTTP,
+#       instancePort: 3000
+#     }
+#
+# @arg spec An ELB Listener specification record.
+# @return A Fugue.Core.AWS.ELB.Listener value.
+fun new(spec: ListenerSpec) -> ELB.Listener:
+  case check(spec) of
+    | Success  -> ELB.Listener(spec)
+    | Fail msg -> error(String.concat("Invalid Listener: ", msg))
+
+# ELB Listener Specification (Resource)
+#
+# This type of value is used to specify an ELB Listener for the
+# Listener.`new`() constructor.
+#
+# @field protocol The protocol to listen with on the ELB. This value
+# is important for enabling certain load balancing schemes and SSL
+# termination options.
+#
+# @field loadBalancerPort The port on the load balancer to listen
+# on. This is where clients make requests.
+#
+# @field instanceProtocol The protocol to use when forwarding
+# connections from the ELB to instances. This is optional, and really
+# only necessary when it differs from the `protocol` property. In such
+# a case, some kind of protocol translation behavior in the ELB is
+# implied, for example HTTPS to HTTP by way of SSL termination.
+#
+# @field instancePort The port on which to forward requests to
+# instances in the ELB pool. For instance, you might have a
+# `loadBalancerPort` of `80` but an `instancePort` of 8080.
+#
+# @field serverCertificate The IAM Server Certificate for HTTPS.
+type ListenerSpec:
+  protocol: ELB.Protocol
+  loadBalancerPort: Int
+  instanceProtocol: Optional<ELB.Protocol>
+  instancePort: Int
+  serverCertificate: Optional<IAM.ServerCertificate>
+
+# ELB Listener Specification (Default Values)
+default: {
+  instanceProtocol: None
+}
+
+# PRIVATE
+# Test whether an integer value (`val`) is within the bounds
+# given by `max` and `min`.
+fun outOfBounds(val: Int, min: Int, max: Int) -> Bool: val < min || val > max
+
+# PRIVATE
+# Test whether a valid listener / instance protocol pair was given.
+fun invalidInstanceProtocol(spec: ListenerSpec) -> Bool:
+  case (spec.protocol, spec.instanceProtocol) of
+    | (ELB.HTTP, Optional ELB.TCP)  -> True
+    | (ELB.HTTP, Optional ELB.SSL)  -> True
+    | (ELB.HTTPS, Optional ELB.TCP) -> True
+    | (ELB.HTTPS, Optional ELB.SSL) -> True
+    | (ELB.TCP, Optional ELB.HTTP)  -> True
+    | (ELB.TCP, Optional ELB.HTTPS) -> True
+    | (ELB.SSL, Optional ELB.HTTP)  -> True
+    | (ELB.SSL, Optional ELB.HTTPS) -> True
+    | _                             -> False
+
+# PRIVATE
+# Validate a listener specification.
+fun check(spec: ListenerSpec) -> Validation:
+  if outOfBounds(spec.instancePort, 1, 65535) then Fail "instancePort must be between 1 and 65535"
+  elif outOfBounds(spec.loadBalancerPort, 1, 65535) then Fail "loadBalancerPort must be between 1 and 65535"
+  elif invalidInstanceProtocol(spec) then Fail "invalid instanceProtocol for specified protocol"
+  else Success
+
+

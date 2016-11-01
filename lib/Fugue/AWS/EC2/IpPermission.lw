@@ -1,0 +1,144 @@
+# This is the preferred interface for making IP Permissions for
+# Security Groups with Fugue. The `new` function is the right place to
+# start.
+
+export
+  module Target as Target
+  default
+  http
+  https
+  mysql
+  new
+  ssh
+  tcp
+  udp
+
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.AWS.EC2.IpPermission.Target as Target
+
+# **DEPRECATED**: Use of `Fugue.AWS.IpPermission.default` is no longer
+# required. It will be removed in a future release.
+default: {}
+
+# `new` IP Permission (Constructor)
+#
+# Call this constructor to create a new
+# Fugue.Core.AWS.EC2.IpPermission value.
+#
+# Example usage:
+#
+#     elbHTTP: EC2.IpPermission.new {
+#       ipProtocol: "tcp",
+#       fromPort: 80,
+#       toPort: 80,
+#       prefixLists: None,
+#       target: EC2.IpPermission.Target.ipRanges ["0.0.0.0/0"]
+#     }
+#
+# @arg ipProtocol Name or number of the IP protocol for the rule, for
+# example `TCP` or `UDP`.
+#
+# @arg fromPort The lowest port number of the port range for the
+# permission.
+#
+# @arg toPort The highest port number of the port range for the
+# permission. For a single port, make this the same as the `fromPort`.
+#
+# @arg prefixLists A list of AWS service prefixes to allow in the
+# permission. This field is useful when creating a VPC endpoint for an
+# AWS service, and is only valid for egress rules. For more
+# information, see
+# docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-endpoints.html
+#
+# @arg target The target of the permission. Examples include, but
+# aren't limited to, CIDR ranges and other security groups.
+#
+# @return A Fugue.Core.AWS.EC2.IpPermission value.
+fun new {
+      ipProtocol: String,
+      fromPort: Int,
+      toPort: Int,
+      prefixLists: Optional<List<EC2.PrefixList>>,
+      target: EC2.IpPermissionTarget
+    } -> EC2.IpPermission:
+  EC2.IpPermission {
+    ipProtocol: ipProtocol,
+    fromPort: fromPort,
+    toPort: toPort,
+    prefixLists: prefixLists,
+    target: target,
+  }
+
+# Create an IpPermission for a give TCP port.
+#
+# Example usage:
+#
+#     devFromAll: EC2.IpPermission.tcp(3000, EC2.IpPermission.Target.all)
+#
+# @arg port The port that will be accessed.
+#
+# @arg target The target of the permission.
+#
+# @return An IpPermission.
+fun tcp(port: Int, target: EC2.IpPermissionTarget) -> EC2.IpPermission:
+  new {
+    ipProtocol: "tcp",
+    fromPort: port,
+    toPort: port,
+    target: target
+  }
+
+# Create an IpPermission allowing HTTP traffic on port 80.
+#
+# Example usage:
+#
+#     httpFromAll: EC2.IpPermission.http(EC2.IpPermission.Target.all)
+#
+# @arg target The target of the permission.
+fun http(target: EC2.IpPermissionTarget) -> EC2.IpPermission: tcp(80, target)
+
+# Create an IpPermission allowing HTTPS traffic on port 443.
+#
+# Example usage:
+#
+#     httpFromAll: EC2.IpPermission.https(EC2.IpPermission.Target.all)
+#
+# @arg target The target of the permission.
+fun https(target: EC2.IpPermissionTarget) -> EC2.IpPermission: tcp(443, target)
+
+# Create an IpPermission allowing MySQL traffic on port 3306.
+#
+# Example usage:
+#
+#     mysqlFromAll: EC2.IpPermission.mysql(EC2.IpPermission.Target.all)
+#
+# @arg target The target of the permission.
+fun mysql(target: EC2.IpPermissionTarget) -> EC2.IpPermission: tcp(3306, target)
+
+# Create an IpPermission allowing SSH traffic on port 22.
+#
+# Example usage:
+#
+#     sshFromAll: EC2.IpPermission.ssh(EC2.IpPermission.Target.all)
+#
+# @arg target The target of the permission.
+fun ssh(target: EC2.IpPermissionTarget) -> EC2.IpPermission: tcp(22, target)
+
+# Create an IpPermission for a give udp port.
+#
+# Example usage:
+#
+#     dnsFromAll: EC2.IpPermission.udp(53, EC2.IpPermission.Target.all)
+#
+# @arg port The port that is accessed.
+#
+# @arg target The target of the rule.
+#
+# @return An IpPermission.
+fun udp(port: Int, target: EC2.IpPermissionTarget) -> EC2.IpPermission:
+  new {
+    ipProtocol: "udp",
+    fromPort: port,
+    toPort: port,
+    target: target
+  }

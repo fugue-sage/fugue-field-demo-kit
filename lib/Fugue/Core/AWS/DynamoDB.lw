@@ -1,0 +1,73 @@
+import Fugue.Core.AWS.Common as AWS
+
+type AttributeDefinition:
+  | AttributeDefinition 
+      attributeName: String
+      attributeType: ScalarAttributeType
+    
+
+type GlobalSecondaryIndex:
+  | GlobalSecondaryIndex 
+      indexName: String
+      keySchema: List<KeySchemaElement>
+      projection: Projection
+      provisionedThroughput: @mutable ProvisionedThroughput
+    
+
+type KeySchemaElement:
+  | KeySchemaElement 
+      attributeName: String
+      keyType: KeyType
+    
+
+type LocalSecondaryIndex:
+  | LocalSecondaryIndex 
+      indexName: String
+      keySchema: List<KeySchemaElement>
+      projection: Projection
+    
+
+type ProvisionedThroughput:
+  | ProvisionedThroughput 
+      readCapacityUnits: Int
+      writeCapacityUnits: Int
+    
+
+type KeyType:
+  | HASH
+  | RANGE
+
+type ScalarAttributeType:
+  | S
+  | N
+  | B
+
+type Projection:
+  | Projection 
+      projectionType: Optional<ProjectionType>
+      nonKeyAttributes: Optional<List<String>>
+    
+
+type ProjectionType:
+  | ALL
+  | KEYSONLY
+  | INCLUDE
+
+type StreamViewType:
+  | NewImageView
+  | OldImageView
+  | NewAndOldImagesView
+  | KeysOnlyView
+
+type Table:
+  | Table 
+      attributeDefinitions: List<AttributeDefinition>
+      tableName: String
+      keySchema: List<KeySchemaElement>
+      provisionedThroughput: @mutable ProvisionedThroughput
+      localSecondaryIndexes: Optional<List<LocalSecondaryIndex>>
+      globalSecondaryIndexes: @mutable Optional<List<GlobalSecondaryIndex>>
+      region: AWS.Region
+      streamViewType: @mutable Optional<StreamViewType>
+    
+

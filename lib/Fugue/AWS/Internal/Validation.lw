@@ -1,0 +1,110 @@
+export
+  type Validation
+  operator |+|
+  concat
+  join
+  listLenValidator
+  nonNegativeValidator
+  strLenValidator
+
+import Ludwig.Int as Int
+
+type Validation:
+  | Success
+  | Fail String
+
+fun join(x: Validation, y: Validation) -> Validation:
+  case x of
+    | Success -> y
+    | Fail _  -> x
+
+operator |+| infixl 6: join
+
+# Reduce a list of Validations into a single value.
+#
+# Example usage:
+#
+#     invalid1: concat [Success, Success, Fail("boom"), Success] # => Fail("boom")
+#     invalid2: concat [Fail("A"), Fail("B")]                    # => Fail("A")
+#     valid: concat [Success, Success]                           # => Success
+#
+# @arg validations The list of validations to combine.
+#
+# @return A single validation that is the result of `join`ing all of
+# the supplied validations together.
+fun concat(validations: List<Validation>) -> Validation:
+  List.fold(join, Success, validations)
+
+fun lengthValidator {
+      min: Int,
+      max: Int,
+      length: fun(a) -> Int,
+      formatErr: fun(Int, Int) -> String
+    } -> (fun(Optional<a>) -> Validation):
+  let validLength: fun(x):
+    let len: length(x)
+    len >= min && len <= max
+  fun(val):
+    if Optional.mapUnpack(True, validLength, val) then
+      Success
+    else
+      Fail(formatErr(min, max))
+
+# Construct a validation function to verify the length of a string is
+# within the provided bounds.
+#
+# Example usage:
+#
+#     validateFoo: strLenValidator {field: "foo", min: 1, max: 10}
+#     validateFoo(11) # => Fail("foo must be between 1 and 10 characters in length")
+#
+#
+# @arg field The name of the field being validated. Used to customize
+# the error message for invalid strings.
+#
+# @arg min The minimum length of the target string.
+#
+# @arg max The maximum length of the target string.
+fun strLenValidator {field: String, min: Int, max: Int} -> (fun(Optional<String>) -> Validation):
+  lengthValidator {
+    min: min,
+    max: max,
+    length: String.length,
+    formatErr: fun(min, max): field ++ " must be between " ++ Int.toString(min) ++ " and " ++ Int.toString(max) ++ " characters in length"
+  }
+
+# Construct a validation function to verify the length of a list is
+# within the provided bounds.
+#
+# Example usage:
+#
+#     validateFoo: listLenValidator {field: "foo", min: 1, max: 10}
+#     validateFoo([]) # => Fail("foo must be between 1 and 10 characters in length")
+#
+#
+# @arg field The name of the field being validated. Used to customize
+# the error message for invalid lists.
+#
+# @arg min The minimum length of the target list.
+#
+# @arg max The maximum length of the target list.
+fun listLenValidator {field: String, min: Int, max: Int} -> (fun(Optional<List<a>>) -> Validation):
+  lengthValidator {
+    min: min,
+    max: max,
+    length: List.length,
+    formatErr: fun(min, max): field ++ " must be between " ++ Int.toString(min) ++ " and " ++ Int.toString(max) ++ " elements in length"
+  }
+
+# Construct a validation function to verify that an int is
+# non-negative.
+#
+# Example usage:
+#
+#     validateBar: nonNegativeValidator("bar")
+#     validateBar(-1) # => Fail("bar must be non-negative")
+#
+# @arg field The name of the field being validated. Used to customize
+# the error message for invalid ints.
+fun nonNegativeValidator(field: String) -> (fun(Int) -> Validation):
+  fun(n): if n < 0 then Fail(field ++ " must be non-negative") else Success

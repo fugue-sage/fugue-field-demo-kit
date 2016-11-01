@@ -1,0 +1,8 @@
+export
+  module S3 as .
+  module Bucket as Bucket
+  module CORS as CORS
+
+import Fugue.AWS.S3.Bucket as Bucket
+import Fugue.AWS.S3.CORS as CORS
+import Fugue.Core.AWS.S3 as S3

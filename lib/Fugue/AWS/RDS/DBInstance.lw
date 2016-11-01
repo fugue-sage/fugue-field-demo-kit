@@ -1,0 +1,351 @@
+export
+  type Spec
+  default
+  external
+  new
+
+import Fugue.AWS.Region as Region
+import Fugue.Core.AWS.CloudHSM as HSM
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.Core.AWS.IAM as IAM
+import Fugue.Core.AWS.KMS as KMS
+import Fugue.Core.AWS.RDS as RDS
+import Fugue.Core.Vars as Vars
+import Ludwig.External as External
+
+# *DEPRECATED*
+#
+# See `Fugue.AWS.RDS.DbInstance.new` for the documentation on the
+# current arguments.
+type Spec:
+  dbInstanceIdentifier: String
+  dbInstanceClass: RDS.DBInstanceClass
+  engine: RDS.Engine
+  masterUsername: Optional<String>
+  dbName: Optional<String>
+  allocatedStorage: Optional<Int>
+  securityGroups: List<EC2.SecurityGroup>
+  availabilityZone: Optional<AWS.AvailabilityZone>
+  dbSubnetGroup: RDS.DBSubnetGroup
+  multiAZ: Optional<Bool>
+  storageType: Optional<EC2.VolumeType>
+  port: Optional<Int>
+  masterUserPassword: Optional<Vars.Password>
+  tags: Optional<List<AWS.Tag>>
+
+# Defaults for RDS DBInstances.
+#
+# - `dbName`: None - see above for what this means for your Engine.
+# - `multiAZ`: None - a single AZ deployment.
+# - storageType: None - use the "standard" volume type.
+# - port: None - use the default port for your Engine.
+# - tags: None - no tags are attached.
+default: {
+  dbName: None,
+  multiAZ: None,
+  storageType: None,
+  port: None,
+  tags: None,
+}
+
+# Create a new DBInstance.
+#
+# Example:
+#
+#     import Fugue.AWS.EC2 as EC2
+#     import Fugue.AWS.Pattern.Network as Network
+#     import Fugue.AWS.RDS as RDS
+#     import Fugue.Core.AWS.Common as AWS
+#     import Fugue.Core.Vars as Vars
+#     
+#     net: Network.new({
+#       name: "EXAMPLE",
+#       cidr: "10.42.0.0/16",
+#       region: AWS.Us-east-1,
+#       publicSubnets: [
+#         (AWS.B, "10.42.12.0/24"),
+#         (AWS.C, "10.42.13.0/24")
+#       ],
+#       privateSubnets: [
+#         (AWS.B, "10.42.22.0/24"),
+#         (AWS.C, "10.42.23.0/24")
+#       ]
+#     })
+#     
+#     dbSubnetGroup: RDS.DBSubnetGroup.new {
+#       name: "private",
+#       description: "private subnets",
+#       subnets: net.privateSubnets,
+#       tags: None,
+#     }
+#     
+#     dbSecurityGroup: EC2.SecurityGroup.new {
+#       description: "My Database",
+#       ipPermissions: [
+#         # add rules here...
+#       ],
+#       ipPermissionsEgress: None,
+#       vpc: net.vpc,
+#       tags: None
+#     }
+#     
+#     dbInstance: RDS.DBInstance.new {
+#       dbInstanceIdentifier: "myDB",
+#       dbInstanceClass: RDS.DB_M1_LARGE,
+#       engine: RDS.Postgres,
+#       masterUsername: "master",
+#       dbName: None,
+#       allocatedStorage: 2048,
+#       securityGroups: [dbSecurityGroup],
+#       availabilityZone: None,
+#       dbSubnetGroup: dbSubnetGroup,
+#       multiAZ: True,
+#       storageType: EC2.Gp2,
+#       port: None,
+#       masterUserPassword: Vars.PlainText {password: "12345"},
+#       tags: None,
+#     }
+#
+# The limits on `allocatedStorage` differ per Engine:
+#
+#  - `MySQL`, `MariaDB`, and `Postgres`: 5-6144
+#  - `OracleSE`, `OracleSE`, and `OracleEE`: 10-6144
+#  - `SQLServerEE` and `SQLServerSE`: 200-4096
+#  - `SQLServerEX` and `SQLServerWeb`: 20-4096
+#
+# The meaning of `dbName` differs per Engine:
+#
+# - `MySQL`: The initial database to create.
+#     - No database is created if `dbName` is not specified.
+#     - Maximum length of 64 characters.
+#
+# - `MariaDB`: The initial database to create.
+#     - No database is created if `dbName` is not specified.
+#     - Maximum length of 64 characters.
+#
+# - `Postgres`: The initial database to create.
+#     - No database is created if `dbName` is not specified.
+#     - Maximum length of 63 characters.
+#     - Must begin with a letter or underscore.
+#
+# - `OracleSE1`, `OracleSE`, `OracleEE`: The SID of the DB instance.
+#     - Defaults to `ORCL`.
+#     - Maximum length of 8 characters.
+#
+# - `SQLServerEE`, `SQLServerSE`, `SQLServerEX`, `SQLServerWeb`: Must be `None.
+#
+# - `Aurora`: The initial database to create.
+#     - No database is created if `dbName` is not specified.
+#     - Maximum length of 64 characters.
+#
+# @arg dbInstanceIdentifier Must be a lowercase string of alphanumeric
+# characters and hyphens between 1 and 63 characters in length
+# (limited to 15 characters for SQL Server).
+#
+# @arg dbInstanceClass The instance type to run the DB on.
+#
+# @arg engine The DB engine to run.
+#
+# @arg masterUsername The name of the database master user.
+#
+# @arg dbName `Engine` specific, see above for details.
+#
+# @arg allocatedStorage The amount of storage to allocate in GB. See
+# `Engine` specific constraints above.
+#
+# @arg securityGroups List of security groups to attach to the
+# instance.
+#
+# @arg availabilityZone The AZ to deploy the instance in. Must be
+# `None` if `multiAZ` is `True`.
+#
+# @arg dbSubnetGroup The DBSubnetGroup to deploy the instance in.
+#
+# @arg multiAZ Set to `True` for a Multi-AZ
+# deployment. `availabiltyZone` must be `None` if set to `True`. Do
+# not use with `SQLServerEE`, `SQLServerSE`, `SQLServerEX`, or
+# `SQLServerWeb`.
+#
+# @arg storageType The type of storage to use.
+#
+# @arg port The port the DB listens on. Valid ports are between 1150
+# and 65535, except for SQL Server which can use all ports in
+# 1150-65535 except 1434, 3389, 47001, and 49152-49156.
+#
+# @arg masterUserPassword The password for the master database user.
+#
+# @arg tags Optional list of tags to attach to the DB instance.
+#
+# @arg optionGroup Associate the DBInstance with the provided
+# `Fugue.AWS.RDS.OptionGroup`.
+#
+# @arg preferredBackupWindow The daily window where backups are
+# performed. Window is specified in UTC using the following format:
+# 'hh24:mi-hh24:mi'. The provided window must be at least 30
+# minutes. Defaults to a randomly selected 30 minute window
+# appropriate for the region.
+#
+# @arg backupRetentionPeriod The number of days that backups will be
+# retained. Specifying 0 will disable backups. Defaults to 1.
+#
+# @arg preferredMaintenanceWindow The weekly window where maintenance
+# can be performed by AWS. Window is specified in UTC using the
+# following format: 'ddd:hh24:mi-ddd:hh24:mi'. The provided window
+# must be at least 30 minutes. Defaults to a randomly selected day and
+# 30 minute window appropriate for the region.
+#
+# @arg engineVersion The version of the database engine to use. See
+# RDS documentation for a list of supported versions.
+#
+# @arg autoMinorVersionUpgrade If `True` allows AWS to apply minor
+# version upgrades to your database during the monthly maintenance
+# window. Default to `True`.
+#
+# @arg licenseModel The license model used the DBInstance.
+#
+# @arg iops Provisioned IOPS to allocate for the DBInstance. Must be
+# 3-10 times the size of the allocated storage for your DBInstance,
+# rounded up to the nearest 1000.
+#
+# @arg characterSetName The character set to associate with the
+# DBInstance. Not supported by all engines.
+#
+# @arg publiclyAccessible If `True` the `DBInstance` has a public IP
+# and DNS name. If `False` the `DBInstance` will only be accessible
+# from within your VPC. Defaults to `False`.
+#
+# @arg storageEncrypted If `True` the `DBInstance`'s will use
+# encrypted storage. Defaults to `False`.
+#
+# @arg caCertificateIdentifier
+#
+# @arg copyTagsToSnapshot If `True` all `Tag`s from the `DBInstance`
+# will be copied to any snapshots taken of the instance. Defaults to
+# `False`.
+#
+# @arg monitoringInterval Interval in seconds that enhanced monitoring
+# metrics are collected. Set to 0 to disable enhanced monitoring. Must
+# be one of: 0, 1, 5, 10, 15, 30, or 60. Defaults to 0.
+#
+# @arg promotionTier Aurora only. Specifies the order in which a
+# replica is promoted to primary after a primary failure. Must be
+# between 0 and 15. Default to 1.
+#
+# @arg dbCluster Aurora only. The DBCluster that this DBInstance is a
+# member of.
+#
+# @arg dbParameterGroup The DBParameterGroup to associate with this
+# DBInstance.
+#
+# @arg domain The Active Directory domain to create the DBInstance in.
+#
+# @arg domainRole The `IAM.Role` to use for domain authentication.
+#
+# @arg monitoringRole The `IAM.Role` to use when sending enhanced
+# metrics to CloudWatch Logs. Required if enhanced metrics are enabled
+# (`monitoringInterval` is non-zero).
+#
+# @arg kmsKey The KMS key to use when encrypting DBInstance
+# storage. Defaults to the default KMS key for your account.
+#
+# @arg allowMajorVersionUpgrade Set to `True` to enable changes to the
+# major version of the engine. If `False` attempts to change the
+# engine version will result in a runtime error. Defaults to `False`.
+#
+# @arg dbSnapshotIdentifier The snapshot to provision the `DBInstance`
+# from.
+#
+# @return The DBInstance.
+fun new {
+      dbInstanceIdentifier: String,
+      dbInstanceClass: RDS.DBInstanceClass,
+      engine: RDS.Engine,
+      masterUsername: Optional<String>,
+      dbName: Optional<String>,
+      allocatedStorage: Optional<Int>,
+      securityGroups: List<EC2.SecurityGroup>,
+      availabilityZone: Optional<AWS.AvailabilityZone>,
+      dbSubnetGroup: RDS.DBSubnetGroup,
+      multiAZ: Optional<Bool>,
+      storageType: Optional<EC2.VolumeType>,
+      port: Optional<Int>,
+      masterUserPassword: Optional<Vars.Password>,
+      tags: Optional<List<AWS.Tag>>,
+      optionGroup: Optional<RDS.OptionGroup>,
+      preferredBackupWindow: Optional<String>,
+      backupRetentionPeriod: Optional<Int>,
+      preferredMaintenanceWindow: Optional<String>,
+      engineVersion: Optional<String>,
+      autoMinorVersionUpgrade: Optional<Bool>,
+      licenseModel: Optional<RDS.LicenseModel>,
+      iops: Optional<Int>,
+      characterSetName: Optional<String>,
+      publiclyAccessible: Optional<Bool>,
+      storageEncrypted: Optional<Bool>,
+      caCertificateIdentifier: Optional<String>,
+      copyTagsToSnapshot: Optional<Bool>,
+      monitoringInterval: Optional<Int>,
+      promotionTier: Optional<Int>,
+      dbCluster: Optional<RDS.DBCluster>,
+      dbParameterGroup: Optional<RDS.DBParameterGroup>,
+      domain: Optional<String>,
+      domainRole: Optional<IAM.Role>,
+      monitoringRole: Optional<IAM.Role>,
+      kmsKey: Optional<KMS.Key>,
+      allowMajorVersionUpgrade: Optional<Bool>,
+      dbSnapshotIdentifier: Optional<String>
+    } -> RDS.DBInstance:
+  RDS.DBInstance {
+    dbInstanceIdentifier: dbInstanceIdentifier,
+    dbInstanceClass: dbInstanceClass,
+    engine: engine,
+    masterUsername: masterUsername,
+    dbName: dbName,
+    allocatedStorage: allocatedStorage,
+    vpcSecurityGroups: securityGroups,
+    availabilityZone: availabilityZone,
+    dbSubnetGroup: dbSubnetGroup,
+    multiAZ: multiAZ,
+    storageType: storageType,
+    dbInstancePort: port,
+    masterUserPassword: masterUserPassword,
+    tags: tags,
+
+    optionGroup: optionGroup,
+    preferredBackupWindow: preferredBackupWindow,
+    backupRetentionPeriod: backupRetentionPeriod,
+    preferredMaintenanceWindow: preferredMaintenanceWindow,
+    engineVersion: engineVersion,
+    autoMinorVersionUpgrade: autoMinorVersionUpgrade,
+    licenseModel: licenseModel,
+    iops: iops,
+    characterSetName: characterSetName,
+    publiclyAccessible: publiclyAccessible,
+    storageEncrypted: storageEncrypted,
+    caCertificateIdentifier: caCertificateIdentifier,
+    copyTagsToSnapshot: copyTagsToSnapshot,
+    monitoringInterval: monitoringInterval,
+    promotionTier: promotionTier,
+    dbCluster: dbCluster,
+    dbParameterGroup: dbParameterGroup,
+    domain: domain,
+    domainRole: domainRole,
+    monitoringRole: monitoringRole,
+    kmsKey: kmsKey,
+    allowMajorVersionUpgrade: allowMajorVersionUpgrade,
+    dbSnapshotIdentifier: dbSnapshotIdentifier,
+  }
+
+# Create a reference to an externally managed DBInstance.
+#
+# Example usage:
+#
+#     dbinstance: RDS.DBInstance.external("test-db", AWS.Us-east-1)
+#
+# @arg name The name of the target DBInstance.
+# @arg region The Region containing the target DBInstance.
+#
+# @return A reference to the specified DBInstance.
+fun external(name: String, region: AWS.Region) -> RDS.DBInstance:
+  External.external {value: name, namespace: Region.toString(region)}

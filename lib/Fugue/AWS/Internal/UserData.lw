@@ -1,0 +1,15 @@
+import Fugue.AWS.Internal.Validation as V
+import Ludwig.Base64 as Base64
+
+fun getEncodedUserData(userData: Optional<String>, userDataBin: Optional<Bytes>) -> Optional<String>:
+  case (userData, userDataBin) of
+    | (Optional x, _) -> Optional(Base64.encode(String.toBytes(x)))
+    | (_, Optional x) -> Optional(Base64.encode(x))
+    | _               -> None
+
+fun validateUserData(userData: Optional<String>, userDataBin: Optional<Bytes>) -> V.Validation:
+  case (userData, userDataBin) of
+    | (Optional x, Optional y) -> V.Fail("Exactly one of userData and userDataBin may be specified")
+    | _                        -> V.Success
+
+validateSize: V.strLenValidator {field: "userData", min: 1, max: 21847}

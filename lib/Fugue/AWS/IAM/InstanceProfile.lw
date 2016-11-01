@@ -1,0 +1,75 @@
+export
+  type Spec
+  external
+  new
+
+import Fugue.Core.AWS.IAM as IAM
+import Ludwig.External as External
+
+# IAM Instance Profile Specification
+# 
+# This type specifies an IAM instance profile, a container that
+# passes IAM role information to an EC2 instance at start time.
+#
+# @field instanceProfileName The name of the profile.
+#
+# @field roles A list of roles to attach to this profile.
+type Spec:
+  instanceProfileName: String
+  roles: List<IAM.Role>
+
+# InstanceProfile Constructor
+#
+# Call this constructor to create a new Fugue.AWS.IAM.InstanceProfile value.
+#
+# Example usage:
+#
+#     import Fugue.AWS.IAM as IAM
+#     
+#     myPolicy: IAM.Policy.new {
+#       policyName: "my-policy",
+#       policyDocument: '{
+#       "Version": "2012-10-17",
+#       "Statement": {
+#         "Effect": "Allow",
+#         "Action": "s3:ListBucket",
+#         "Resource": "arn:aws:s3:::*"
+#       }
+#     }',
+#     }
+#     
+#     myRole: IAM.Role.new {
+#       roleName: "my-role",
+#       rolePolicies: [myPolicy],
+#       assumeRolePolicyDocument: '{
+#       "Version": "2012-10-17",
+#       "Statement": {
+#         "Effect": "Allow",
+#         "Principal": {"Service": "ec2.amazonaws.com"},
+#         "Action": "sts:AssumeRole"
+#       }
+#     }',
+#     }
+#     
+#     myProfile: IAM.InstanceProfile.new {
+#       instanceProfileName: "myProfile",
+#       roles: [myRole],
+#     }
+#
+# @arg spec An IAM InstanceProfile record.
+# @return A Fugue.AWS.IAM.InstanceProfile record.
+fun new(spec: Spec) -> IAM.InstanceProfile: IAM.InstanceProfile(spec)
+
+# Create a reference to an externally managed InstanceProfile.
+#
+# Example usage:
+#
+#     profile: IAM.InstanceProfile.external("MyProfile")
+#
+# @arg name The name of the target InstanceProfile. Maximum length of
+#           128 characters. May include any alphanumeric characters
+#           except for space as well as `=`, `,`, `.`, `@`, and `-`.
+#
+# @return A reference to the specified InstanceProfile.
+fun external(name: String) -> IAM.InstanceProfile:
+  External.external {value: name, namespace: "global"}

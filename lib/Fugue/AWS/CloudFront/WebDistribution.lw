@@ -1,0 +1,111 @@
+# This is the preferred interface for making CloudFront WebDistributions
+# with Fugue. If you want to manage an CloudFront WebDistributions with Fugue, the
+# `new` function is the right place to start.
+
+export
+  new
+  external
+
+import Fugue.AWS.Internal.Validation as V
+import Fugue.AWS.ResourceID as ResourceID
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.CloudFront as CF
+
+# `new` CloudFront WebDistribution (Constructor)
+#
+# Call this constructor to create a new 
+# Fugue.Core.AWS.CloudFront.WebDistribution value.
+#
+# @arg aliases A list of CNAME elements, if any, for this distribution.
+# 
+# @arg defaultRootObject The object that you want CloudFront to return 
+# (for example, index.html) when an end user requests the root URL for your 
+# distribution (http://www.example.com) instead of an object in your 
+# distribution (http://www.example.com/index.html). Specifying a default root 
+# object avoids exposing the contents of your distribution. 
+# 
+# @arg origins a list of CloudFront.Origin objects that contains information
+# about origins for this distribution.
+# 
+# @arg defaultCacheBehavior a CloudFront.DefaultCacheBehavior object that 
+# describes the default cache behavior if you do not specify a CacheBehavior 
+# element or if files don't match any of the values of PathPattern in 
+# CacheBehavior elements.You must create exactly one default cache behavior.
+# 
+# @arg cacheBehaviors a list of CloudFront.CacheBehavior objects that describe
+# the cache behavior of this WebDistribution.
+# 
+# @arg customErrorResponses a list of CloudFront.CustomErrorResponse objects
+# that describe custom error responses for this WebDistribution.
+# 
+# @arg comment Any comments you want to include about the distribution.
+# 
+# @arg logging a CloudFront.LoggingConfig object that describes the logging
+# configuration for this WebDistribution.
+# 
+# @arg priceClass a CloudFront.PriceClass object that contains information 
+# about price class for this WebDistribution.
+# 
+# @arg enabled Whether the distribution is enabled to accept end user requests 
+# for content.
+# 
+# @arg viewerCertificate a CloudFront.ViewerCertificate object that contains
+# information about viewer certificates for this WebDistribution.
+# 
+# @arg restrictions a CloudFront.GeoRestriction object that contains information
+# about ways in which to restrict distribution of content in this
+# WebDistribution.
+# 
+# @arg webACL if you're using AWS WAF to filter CloudFront requests, the Id of the
+# AWS WAF web ACL that is associated with the distribution.
+# 
+# @return a Fugue.Core.AWS.CloudFront.WebDistribution value.
+fun new {
+        aliases: Optional<List<String>>,
+        defaultRootObject: Optional<String>,
+        origins: List<CF.Origin>,
+        defaultCacheBehavior: CF.DefaultCacheBehavior,
+        cacheBehaviors: Optional<List<CF.CacheBehavior>>,
+        customErrorResponses: Optional<List<CF.CustomErrorResponse>>,
+        comment: String,
+        logging: Optional<CF.LoggingConfig>,
+        priceClass: Optional<CF.PriceClass>,
+        enabled: Bool,
+        viewerCertificate: Optional<CF.ViewerCertificate>,
+        restrictions: Optional<CF.GeoRestriction>,
+        webACL: Optional<CF.WebACL>
+    } -> CF.WebDistribution:
+  let valid: V.concat [
+    V.Success
+  ]
+  case valid of
+    | V.Success -> CF.WebDistribution {
+        aliases: aliases,
+        defaultRootObject: defaultRootObject,
+        origins: origins,
+        defaultCacheBehavior: defaultCacheBehavior,
+        cacheBehaviors: cacheBehaviors,
+        customErrorResponses: customErrorResponses,
+        comment: comment,
+        logging: logging,
+        priceClass: priceClass,
+        enabled: enabled,
+        viewerCertificate: viewerCertificate,
+        restrictions: restrictions,
+        webACL: webACL,
+      }
+    | V.Fail err -> error("Invalid WebDistribution: " ++ err)
+
+# Create a reference to an externally managed WebDistribution.
+# 
+# Example usage:
+#   distribution: CloudFront.WebDistribution.external("S11A16G5KZMEQD")
+#
+# @arg distributionId The CloudFront DistributionId. Must be a 14-character
+# alphanumeric string.
+#
+# @arg region The Region containing the target WebDistribution.
+#
+# @return A reference to the specified WebDistribution.
+fun external(distributionId: String, region: AWS.Region) -> CF.WebDistribution:
+  ResourceID.external(distributionId, region, "")

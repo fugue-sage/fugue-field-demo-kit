@@ -1,0 +1,41 @@
+# This is the preferred interface for making S3 LoggingConfigurations
+# with Fugue. If you want to manage an S3 LoggingConfiguration with 
+# Fugue, the `new` function is the right place to start.
+
+export 
+  new
+
+import Fugue.AWS.Internal.Validation as V
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.S3 as S3
+
+# `new` S3 LoggingConfiguration (Constructor)
+#
+# Call this constructor to create a new 
+# Fugue.Core.AWS.S3.LoggingConfiguration value.
+#
+# @arg targetGrants an Optional<List> of S3.TargetGrant values that defines
+# the permissions and grantee used by the logging configuration
+#
+# @arg targetPrefix a String that defines the prefix used to store the logs in 
+# the target bucket
+#
+# @arg targetBucket a S3.Bucket value that defines the target Bucket to store 
+# logs in
+#
+# @return a Fugue.Core.AWS.S3.LoggingConfiguration value.
+fun new{
+  targetGrants: List<S3.TargetGrant>,
+  targetPrefix: String,
+  targetBucket: S3.Bucket
+} -> S3.LoggingConfiguration:
+  let valid: V.concat[
+    V.Success
+  ]
+  case valid of
+    | V.Success -> S3.LoggingConfiguration{
+        targetGrants: targetGrants,
+        targetPrefix: targetPrefix,
+        targetBucket: targetBucket
+      }
+    | V.Fail err -> error("Invalid LoggingConfiguration: " ++ err)

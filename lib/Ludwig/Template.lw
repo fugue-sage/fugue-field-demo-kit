@@ -1,0 +1,69 @@
+# This module provides template rendering functionality. Templates are
+# written in the Mustache templating language. You can find more
+# details about Mustache here: <http://mustache.github.io/>.
+
+@language("no-prelude")
+
+# Render Mustache templates
+#
+# The following builtin types can be rendered:
+#
+# - `Int`
+# - `Float`
+# - `String`
+#
+# In addition `List`s, `Dictionary`s and records that contain
+# supported types can be rendered. Attempting to render a value of any
+# other of any other type will result in an error.
+#
+# Examples:
+#
+#    ex1: Template.render {
+#      data: {name: "Bob"},
+#      template: "Hello {{name}}!",
+#      missBehavior: Template.MissAsEmptyString,
+#    } # => "Hello Bob!"
+#    
+#    ex2: Template.render {
+#      data: {age: 42},
+#      template: "Hello {{name}}",
+#      missBehavior: Template.MissAsEmptyString,
+#    } # => ""
+#    
+#    ex3: Template.render {
+#      data: {name1: "Bob"},
+#      template: "{{name}}!",
+#      missBehavior: Template.MissAsError,
+#    } # => Substitution error: Variable not found: "name"
+#    
+#    ex4: Template.render {
+#      data: {},
+#      template: "{{#test}}{{/test}}",
+#      missBehavior: Template.MissAsError,
+#    } # => Substitution error: Section target not found: "test"
+#
+# @arg template Template `String`.
+#
+# @arg data Record containing the template data. Only supported types
+# may be rendered.
+#
+# @arg missBehavior Whether to return an error or render the empty
+# string on variable/section miss.
+#
+# @return String containing the rendered template.
+fun render {missBehavior: MissBehavior, data: {a}, template: String} -> String:
+    case missBehavior of
+    | MissAsEmptyString -> __Ludwig_Template_render(data, template)
+    | MissAsError -> __Ludwig_Template_renderChecked(data, template)
+
+# Specify rendering behavior when a template variable is not provided.
+#
+# @constructor MissAsEmptyString Replace any missing variables with
+# the the empty string.
+#
+# @constructor MissAsError Raise an error if any template variables
+# are missing.
+type MissBehavior:
+    | MissAsEmptyString
+    | MissAsError
+

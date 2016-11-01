@@ -1,0 +1,131 @@
+# This is the preferred interface for making Elastic Load Balancer
+# resources with Fugue. The `LoadBalancer`, `Listener`, and
+# `HealthCheck` modules comprise the bulk of the interface.
+#
+# If you want to manage an ELB with Fugue, the `new` function is the
+# right place to start.
+
+export
+  default
+  external
+  new
+  type LoadBalancerSpec
+
+import Fugue.AWS.Internal.Validation as .
+import Fugue.AWS.Region as Region
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.Core.AWS.ELB as ELB
+import Ludwig.External as External
+
+# `new` Elastic Load Balancer (Constructor)
+#
+# Call this constructor to create a new
+# Fugue.Core.AWS.ELB.LoadBalancer value.
+#
+# Example usage:
+#
+#     ELB.LoadBalancer.new {
+#       loadBalancerName: "mvc-complex-elb",
+#       subnets: [
+#         public-10-0-1-0,
+#         public-10-0-2-0
+#       ],
+#       healthCheck: ELB.HealthCheck.tcp {
+#         port: 3000,
+#         interval: 15,
+#         timeout: 3,
+#         unhealthyThreshold: 3,
+#         healthyThreshold: 3
+#       },
+#       securityGroups: [example-elb-sg],
+#       scheme: ELB.Internal,
+#       listeners: [example-listener],
+#       tags: [example-app-tag]
+#     }
+#
+# @arg spec An Elastic Load Balancer specification record.
+# @return A Fugue.Core.AWS.ELB.LoadBalancer value.
+fun new(spec: LoadBalancerSpec) -> ELB.LoadBalancer:
+  case check(spec) of
+    | Success  -> ELB.LoadBalancer(spec)
+    | Fail msg -> error(String.concat("Invalid LoadBalancer: ", msg))
+
+# ELB Load Balancer Specification (Resource)
+#
+# This type of value specifies an ELB for the ELB.`new`() constructor.
+#
+# @field loadBalancerName The name to be applied to the load
+# balancer. If not provided, the name of the binding is used.
+#
+# @field subnets The subnets in which the ELB should forward traffic.
+#
+# @field instances Instances to add to the ELB's server pool. An ELB
+# must have at least one instance in its pool, and that instance must
+# be "healthy" in order to receive traffic. An ELB associated with an
+# Autoscaling Group does not require any values in this field.
+#
+# @field healthCheck A healthcheck configuration for the ELB. This
+# check is how the ELB determines whether an instance is healthy or
+# unhealthy, and only healthy instances receive forwarded traffic.
+#
+# @field securityGroups A list of security groups to apply to the ELB
+# itself.
+#
+# @field scheme A load balancing scheme that the ELB should use.
+#
+# @field listeners A list of listeners to host on the ELB. A listener
+# accepts connections on a port on the load balancer and forwards it
+# to a port on healthy instances in the ELB's pool.
+#
+# @field tags Key-value pair tags to assign to the instance.
+type LoadBalancerSpec:
+  loadBalancerName: String
+  subnets: List<EC2.Subnet>
+  instances: Optional<List<EC2.Instance>>
+  healthCheck: Optional<ELB.HealthCheck>
+  securityGroups: Optional<List<EC2.SecurityGroup>>
+  scheme: Optional<ELB.LoadBalancerScheme>
+  listeners: List<ELB.Listener>
+  tags: Optional<List<AWS.Tag>>
+
+# ELB Load Balancer Specification (Default Values) 
+default: {
+  instances: None,
+  scheme: Optional(ELB.InternetFacing),
+  tags: None
+}
+
+# PRIVATE
+# Test of ELB name validity.
+fun invalidName(name: String) -> Bool:
+  let len: String.length(name)
+  len < 1 || len > 32
+
+# PRIVATE
+# Check whether a list is empty.
+fun emptyList(list: Optional<List<a>>) -> Bool:
+  Optional.optional(True, List.null, list)
+
+# PRIVATE
+# Validate a load balancer specification.
+fun check(spec: LoadBalancerSpec) -> Validation:
+  if invalidName(spec.loadBalancerName) then Fail "loadBalancerName must be between 1 and 32 characters in length"
+  elif List.null(spec.subnets) then Fail "at least one Subnet must be specified"
+  elif emptyList(spec.securityGroups) then Fail "at least one SecurityGroup must be specified"
+  elif List.null(spec.listeners) then Fail "at least one Listener must be specified"
+  else Success
+
+# Create a reference to an externally managed LoadBalancer.
+#
+# Example usage:
+#
+#     elb: ELB.LoadBalancer.external("my-lb", AWS.Us-east-1)
+#
+# @arg name The name of the target LoadBalancer.
+# @arg region The Region containing the target LoadBalancer.
+#
+# @return A reference to the specified LoadBalancer.
+fun external(name: String, region: AWS.Region) -> ELB.LoadBalancer:
+  External.external {value: name, namespace: Region.toString(region)}
+

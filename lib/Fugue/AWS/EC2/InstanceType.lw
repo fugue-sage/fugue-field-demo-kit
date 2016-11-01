@@ -1,0 +1,165 @@
+# This module provides validating functions and abstractions for
+# instance type concerns. For enumerations of actual instance types,
+# see the `Fugue.Core.AWS.EC2` module.
+
+export
+  supportsDedicatedInstances
+  supportsEbsOptimization
+  toString
+
+import Fugue.Core.AWS.EC2 as EC2
+
+# Check if an InstanceType supports EBS optimization.
+#
+# @return `True` if instanceType supports EBS optimization, otherwise
+# False.
+fun supportsEbsOptimization(instanceType: EC2.InstanceType) -> Bool:
+  case instanceType of
+    | EC2.C1_xlarge   -> True
+    | EC2.C3_xlarge   -> True
+    | EC2.C3_2xlarge  -> True
+    | EC2.C3_4xlarge  -> True
+    | EC2.C4_large    -> True
+    | EC2.C4_xlarge   -> True
+    | EC2.C4_2xlarge  -> True
+    | EC2.C4_4xlarge  -> True
+    | EC2.C4_8xlarge  -> True
+    | EC2.D2_xlarge   -> True
+    | EC2.D2_2xlarge  -> True
+    | EC2.D2_4xlarge  -> True
+    | EC2.D2_8xlarge  -> True
+    | EC2.G2_2xlarge  -> True
+    | EC2.I2_xlarge   -> True
+    | EC2.I2_2xlarge  -> True
+    | EC2.I2_4xlarge  -> True
+    | EC2.M1_large    -> True
+    | EC2.M1_xlarge   -> True
+    | EC2.M2_2xlarge  -> True
+    | EC2.M2_4xlarge  -> True
+    | EC2.M3_xlarge   -> True
+    | EC2.M3_2xlarge  -> True
+    | EC2.M4_large    -> True
+    | EC2.M4_xlarge   -> True
+    | EC2.M4_2xlarge  -> True
+    | EC2.M4_4xlarge  -> True
+    | EC2.M4_10xlarge -> True
+    | EC2.R3_xlarge   -> True
+    | EC2.R3_2xlarge  -> True
+    | EC2.R3_4xlarge  -> True
+    | _               -> False
+
+# Check if an InstanceType supports running on dedicated instances.
+#
+# @arg instanceType The instance type to test.
+#
+# @return `True` if the specified instance type supports dedicated
+# instances, otherwise `False`.
+fun supportsDedicatedInstances(instanceType: EC2.InstanceType) -> Bool:
+  case instanceType of
+    | EC2.M1_small    -> True
+    | EC2.M1_medium   -> True
+    | EC2.M1_large    -> True
+    | EC2.M1_xlarge   -> True
+    | EC2.M3_medium   -> True
+    | EC2.M3_large    -> True
+    | EC2.M3_xlarge   -> True
+    | EC2.M3_2xlarge  -> True
+    | EC2.M4_large    -> True
+    | EC2.M4_xlarge   -> True
+    | EC2.M4_2xlarge  -> True
+    | EC2.M4_4xlarge  -> True
+    | EC2.M4_10xlarge -> True
+    | EC2.M2_xlarge   -> True
+    | EC2.M2_2xlarge  -> True
+    | EC2.M2_4xlarge  -> True
+    | EC2.Cr1_8xlarge -> True
+    | EC2.I2_xlarge   -> True
+    | EC2.I2_2xlarge  -> True
+    | EC2.I2_4xlarge  -> True
+    | EC2.I2_8xlarge  -> True
+    | EC2.Hi1_4xlarge -> True
+    | EC2.Hs1_8xlarge -> True
+    | EC2.C1_medium   -> True
+    | EC2.C1_xlarge   -> True
+    | EC2.C3_large    -> True
+    | EC2.C3_xlarge   -> True
+    | EC2.C3_2xlarge  -> True
+    | EC2.C3_4xlarge  -> True
+    | EC2.C3_8xlarge  -> True
+    | EC2.C4_large    -> True
+    | EC2.C4_xlarge   -> True
+    | EC2.C4_2xlarge  -> True
+    | EC2.C4_4xlarge  -> True
+    | EC2.C4_8xlarge  -> True
+    | EC2.Cc2_8xlarge -> True
+    | EC2.G2_2xlarge  -> True
+    | EC2.G2_8xlarge  -> True
+    | EC2.Cg1_4xlarge -> True
+    | EC2.R3_large    -> True
+    | EC2.R3_xlarge   -> True
+    | EC2.R3_2xlarge  -> True
+    | EC2.R3_4xlarge  -> True
+    | EC2.R3_8xlarge  -> True
+    | EC2.D2_xlarge   -> True
+    | EC2.D2_2xlarge  -> True
+    | EC2.D2_4xlarge  -> True
+    | EC2.D2_8xlarge  -> True
+    | _           -> False
+
+fun toString(instanceType: EC2.InstanceType) -> String:
+  case instanceType of
+    | EC2.T1_micro    -> "t1.micro"
+    | EC2.M1_small    -> "m1.small"
+    | EC2.M1_medium   -> "m1.medium"
+    | EC2.M1_large    -> "m1.large"
+    | EC2.M1_xlarge   -> "m1.xlarge"
+    | EC2.M3_medium   -> "m3.medium"
+    | EC2.M3_large    -> "m3.large"
+    | EC2.M3_xlarge   -> "m3.xlarge"
+    | EC2.M3_2xlarge  -> "m3.2xlarge"
+    | EC2.M4_large    -> "m4.large"
+    | EC2.M4_xlarge   -> "m4.xlarge"
+    | EC2.M4_2xlarge  -> "m4.2xlarge"
+    | EC2.M4_4xlarge  -> "m4.4xlarge"
+    | EC2.M4_10xlarge -> "m4.10xlarge"
+    | EC2.T2_nano     -> "t2.nano"
+    | EC2.T2_micro    -> "t2.micro"
+    | EC2.T2_small    -> "t2.small"
+    | EC2.T2_medium   -> "t2.medium"
+    | EC2.T2_large    -> "t2.large"
+    | EC2.M2_xlarge   -> "m2.xlarge"
+    | EC2.M2_2xlarge  -> "m2.2xlarge"
+    | EC2.M2_4xlarge  -> "m2.4xlarge"
+    | EC2.Cr1_8xlarge -> "cr1.8xlarge"
+    | EC2.I2_xlarge   -> "i2.xlarge"
+    | EC2.I2_2xlarge  -> "i2.2xlarge"
+    | EC2.I2_4xlarge  -> "i2.4xlarge"
+    | EC2.I2_8xlarge  -> "i2.8xlarge"
+    | EC2.Hi1_4xlarge -> "hi1.4xlarge"
+    | EC2.Hs1_8xlarge -> "hs1.8xlarge"
+    | EC2.C1_medium   -> "c1.medium"
+    | EC2.C1_xlarge   -> "c1.xlarge"
+    | EC2.C3_large    -> "c3.large"
+    | EC2.C3_xlarge   -> "c3.xlarge"
+    | EC2.C3_2xlarge  -> "c3.2xlarge"
+    | EC2.C3_4xlarge  -> "c3.4xlarge"
+    | EC2.C3_8xlarge  -> "c3.8xlarge"
+    | EC2.C4_large    -> "c4.large"
+    | EC2.C4_xlarge   -> "c4.xlarge"
+    | EC2.C4_2xlarge  -> "c4.2xlarge"
+    | EC2.C4_4xlarge  -> "c4.4xlarge"
+    | EC2.C4_8xlarge  -> "c4.8xlarge"
+    | EC2.Cc1_4xlarge -> "cc1.4xlarge"
+    | EC2.Cc2_8xlarge -> "cc2.8xlarge"
+    | EC2.G2_2xlarge  -> "g2.2xlarge"
+    | EC2.G2_8xlarge  -> "g2.8xlarge"
+    | EC2.Cg1_4xlarge -> "cg1.4xlarge"
+    | EC2.R3_large    -> "r3.large"
+    | EC2.R3_xlarge   -> "r3.xlarge"
+    | EC2.R3_2xlarge  -> "r3.2xlarge"
+    | EC2.R3_4xlarge  -> "r3.4xlarge"
+    | EC2.R3_8xlarge  -> "r3.8xlarge"
+    | EC2.D2_xlarge   -> "d2.xlarge"
+    | EC2.D2_2xlarge  -> "d2.2xlarge"
+    | EC2.D2_4xlarge  -> "d2.4xlarge"
+    | EC2.D2_8xlarge  -> "d2.8xlarge"

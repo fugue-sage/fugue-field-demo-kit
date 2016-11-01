@@ -1,0 +1,173 @@
+# This is the preferred interface for making EC2 Instance resources
+# with Fugue. If you want to manage an EC2 Instance with Fugue, the
+# `new` function is the right place to start.
+
+export
+  default
+  external
+  new
+
+import Fugue.AWS.EC2.InstanceType as InstanceType
+import Fugue.AWS.Internal.UserData as UserData
+import Fugue.AWS.Internal.Validation as V
+import Fugue.AWS.ResourceID as ResourceID
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.Core.AWS.IAM as IAM
+import Ludwig.External as E
+
+# `new` EC2 Instance (Constructor)
+#
+# Call this constructor to create a new Fugue.Core.AWS.EC2.Instance
+# value.
+#
+# @arg keyName The name of the SSH key to install on the instance for
+# remote logins.
+#
+# @arg instanceType The type of EC2 instance to launch.
+#
+# @arg monitoring Specifies whether enhanced CloudWatch monitoring is
+# enabled for the instance.
+#
+# @arg subnet The subnet in which to launch the instance.
+#
+# @arg privateIpAddress The primary private IP address for the
+# instance.
+#
+# @arg blockDeviceMappings The mapping of volumes to block devices for
+# the OS, expressed as an array of BlockDeviceMapping variables.
+#
+# @arg tags AWS tags to apply to the instance.
+#
+# @arg securityGroups Security groups to apply to the instance. At
+# least one security group must be specified.
+#
+# @arg sourceDestCheck Specifies whether source/destination checking
+# is done for network traffic recieved by the instance. If the
+# instance is going to perform NAT, it must accept traffic for sources
+# & destinations other than itself, so this must be disabled.
+#
+# @arg iamInstanceProfile The IAM profile to launch the instance with.
+#
+# @arg ebsOptimized Whether to launch the instance with EBS
+# optimization, which is basically an additional NIC dedicated to EBS
+# traffic. Otherwise, a single NIC usually handles both EBS and
+# regular network traffic.
+#
+# @arg image The ID of the Amazon Machine Image (AMI) to use as the
+# basis for the instance storage.
+#
+# @arg disableApiTermination Whether to disable instance termination
+# via the API.  This applies sort of a "safety switch" to instance
+# termination, which must first be set to "false" before the instance
+# can be terminated.
+#
+# @arg instanceInitiatedShutdownBehavior The behavior AWS should take
+# when the instance initiates its own shutdown, expressed as a
+# ShutdownBehavior variable.
+#
+# @arg userData The userdata script to run at instance first
+# boot. Only one of `userData` or `userDataBin` may be specified.
+#
+# @arg userDataBin The userdata, as bytes, to provide to the
+# instance. Required for sending gzip or multipart encoded
+# userdata. Only one of `userData` or `userDataBin` may be specified.
+#
+# @return A Fugue.Core.AWS.EC2.Instance value.
+fun new {
+      keyName: Optional<String>,
+      instanceType: Optional<EC2.InstanceType>,
+      monitoring: Optional<Bool>,
+      subnet: EC2.Subnet,
+      privateIpAddress: Optional<String>,
+      blockDeviceMappings: Optional<List<EC2.InstanceBlockDeviceMapping>>,
+      tags: Optional<List<AWS.Tag>>,
+      securityGroups: List<EC2.SecurityGroup>,
+      sourceDestCheck: Optional<Bool>,
+      iamInstanceProfile: Optional<IAM.InstanceProfile>,
+      ebsOptimized: Optional<Bool>,
+      image: String,
+      disableApiTermination: Optional<Bool>,
+      instanceInitiatedShutdownBehavior: Optional<EC2.InstanceShutdownBehavior>,
+      userData: Optional<String>,
+      userDataBin: Optional<Bytes>
+    } -> EC2.Instance:
+  let encodedUserData: UserData.getEncodedUserData(userData, userDataBin)
+  let valid: V.concat [
+    validateSecurityGroups(securityGroups),
+    validateVpcTenancy(subnet, Optional.unpack(EC2.M1_small, instanceType)),
+    UserData.validateUserData(userData, userDataBin),
+    UserData.validateSize(encodedUserData),
+  ]
+  case valid of
+    | V.Success -> EC2.Instance {
+                     keyName: keyName,
+                     instanceType: instanceType,
+                     monitoring: monitoring,
+                     subnet: subnet,
+                     privateIpAddress: privateIpAddress,
+                     blockDeviceMappings: blockDeviceMappings,
+                     tags: tags,
+                     securityGroups: securityGroups,
+                     sourceDestCheck: sourceDestCheck,
+                     iamInstanceProfile: iamInstanceProfile,
+                     ebsOptimized: ebsOptimized,
+                     image: image,
+                     disableApiTermination: disableApiTermination,
+                     instanceInitiatedShutdownBehavior: instanceInitiatedShutdownBehavior,
+                     userData: encodedUserData,
+                   }
+    | V.Fail err -> error("Invalid Instance: " ++ err)
+
+# EC2 Instance Specification (Default Values)
+default: {
+  keyName: None,
+  privateIpAddress: None,
+  blockDeviceMappings: None,
+  tags: None,
+  sourceDestCheck: None,
+  iamInstanceProfile: None,
+  ebsOptimized: None,
+  disableApiTermination: None,
+  instanceInitiatedShutdownBehavior: None,
+  userData: None,
+}
+
+fun validateSecurityGroups(groups: List<EC2.SecurityGroup>) -> V.Validation:
+  if List.null(groups) then V.Fail("at least one SecurityGroup must be specified")
+  else V.Success
+
+fun validateVpcTenancy(subnet: EC2.Subnet, instanceType: EC2.InstanceType) -> V.Validation:
+  # We can't perform this validation if the subnet or its vpc are
+  # specified as external resources, so we just pass them through and
+  # let the planners sort it out.
+  if E.isExternal(subnet) then
+    V.Success
+  else
+    let vpc: subnet.(EC2.Subnet).vpc
+    if E.isExternal(vpc) then
+      V.Success
+    else
+      case vpc.(EC2.Vpc).instanceTenancy of
+        | None                        -> V.Success
+        | Optional EC2.DefaultTenancy -> V.Success
+        | _                           -> if InstanceType.supportsDedicatedInstances(instanceType) then
+                                           V.Success
+                                         else
+                                           let name: InstanceType.toString(instanceType)
+                                           V.Fail("InstanceType " ++ name ++ " does not support dedicated instances")
+
+# Create a reference to an externally managed Instance.
+#
+# Example usage:
+#
+#     instance: EC2.Instance.external("i-1234abcd", AWS.Us-east-1)
+#
+# @arg voluemId The ID of the target Instance. Must be of the form
+#               "i-" followed by 8 or 17 characters from a-z and 0-9.
+#
+# @arg region The Region containing the target Instance.
+#
+# @return A reference to the specified Instance.
+fun external(instanceId: String, region: AWS.Region) -> EC2.Instance:
+  ResourceID.external(instanceId, region, "i")

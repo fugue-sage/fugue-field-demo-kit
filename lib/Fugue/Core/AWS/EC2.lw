@@ -1,0 +1,247 @@
+import Fugue.Core.AWS.Common as .
+import Fugue.Core.AWS.IAM as .
+
+type DeviceType:
+  | Ebs
+  | InstanceStore
+
+type DhcpOptions:
+  | DhcpOptions 
+      tags: Optional<List<Tag>>
+      domainNameServers: Optional<List<String>>
+      domainName: Optional<String>
+      ntpServers: Optional<List<String>>
+      netBiosNameServers: Optional<List<String>>
+      netBiosNodeType: Optional<NetBiosNodeType>
+      region: Region
+    
+
+type EbsInstanceBlockDevice:
+  | EbsInstanceBlockDevice 
+      volume: Volume
+      deleteOnTermination: Optional<Bool>
+    
+
+type Instance:
+  | Instance 
+      keyName: Optional<String>
+      instanceType: Optional<InstanceType>
+      monitoring: Optional<Bool>
+      subnet: Subnet
+      privateIpAddress: Optional<String>
+      blockDeviceMappings: Optional<List<InstanceBlockDeviceMapping>>
+      tags: Optional<List<Tag>>
+      securityGroups: Optional<List<SecurityGroup>>
+      sourceDestCheck: Optional<Bool>
+      iamInstanceProfile: Optional<InstanceProfile>
+      ebsOptimized: Optional<Bool>
+      sriovNetSupport: Optional<NotImplemented>
+      image: String
+      disableApiTermination: Optional<Bool>
+      instanceInitiatedShutdownBehavior: Optional<InstanceShutdownBehavior>
+      userData: Optional<String>
+      kernel: Optional<NotImplemented>
+      ramdisk: Optional<NotImplemented>
+      secondaryPrivateIpAddresses: Optional<NotImplemented>
+      numSecondaryPrivateIpAddresses: Optional<NotImplemented>
+      associatePublicIpAddress: Optional<NotImplemented>
+      affinity: Optional<NotImplemented>
+      host: Optional<NotImplemented>
+      placementGroup: Optional<NotImplemented>
+      tenancy: Optional<NotImplemented>
+      enaSupport: Optional<NotImplemented>
+    
+
+type InstanceBlockDeviceMapping:
+  | InstanceBlockDeviceMapping 
+      deviceName: String
+      ebs: Optional<EbsInstanceBlockDevice>
+      virtualName: Optional<String>
+      noDevice: Optional<Bool>
+    
+
+type InstanceShutdownBehavior:
+  | Stop
+  | Terminate
+
+type InstanceType:
+  | T1_micro
+  | M1_small
+  | M1_medium
+  | M1_large
+  | M1_xlarge
+  | M3_medium
+  | M3_large
+  | M3_xlarge
+  | M3_2xlarge
+  | M4_large
+  | M4_xlarge
+  | M4_2xlarge
+  | M4_4xlarge
+  | M4_10xlarge
+  | T2_nano
+  | T2_micro
+  | T2_small
+  | T2_medium
+  | T2_large
+  | M2_xlarge
+  | M2_2xlarge
+  | M2_4xlarge
+  | Cr1_8xlarge
+  | I2_xlarge
+  | I2_2xlarge
+  | I2_4xlarge
+  | I2_8xlarge
+  | Hi1_4xlarge
+  | Hs1_8xlarge
+  | C1_medium
+  | C1_xlarge
+  | C3_large
+  | C3_xlarge
+  | C3_2xlarge
+  | C3_4xlarge
+  | C3_8xlarge
+  | C4_large
+  | C4_xlarge
+  | C4_2xlarge
+  | C4_4xlarge
+  | C4_8xlarge
+  | Cc1_4xlarge
+  | Cc2_8xlarge
+  | G2_2xlarge
+  | G2_8xlarge
+  | Cg1_4xlarge
+  | R3_large
+  | R3_xlarge
+  | R3_2xlarge
+  | R3_4xlarge
+  | R3_8xlarge
+  | D2_xlarge
+  | D2_2xlarge
+  | D2_4xlarge
+  | D2_8xlarge
+
+type InternetGateway:
+  | InternetGateway 
+      tags: Optional<List<Tag>>
+      vpc: Vpc
+      region: Region
+    
+
+type IpPermission:
+  | IpPermission 
+      ipProtocol: String
+      fromPort: Int
+      toPort: Int
+      prefixLists: Optional<List<PrefixList>>
+      target: IpPermissionTarget
+    
+
+type IpPermissionTarget:
+  | IpRanges List<IpRange>
+  | SecurityGroups List<SecurityGroup>
+
+type IpRange:
+  | IpRange 
+      cidrIp: String
+    
+
+type NetBiosNodeType:
+  | BNode
+  | HNode
+  | MNode
+  | PNode
+
+type PrefixList:
+  | PrefixList 
+      prefixListName: Optional<String>
+      cidrs: Optional<List<String>>
+    
+
+type RuleAction:
+  | Allow
+  | Deny
+
+type SecurityGroup:
+  | SecurityGroup 
+      description: String
+      ipPermissions: @mutable Optional<List<IpPermission>>
+      ipPermissionsEgress: @mutable Optional<List<IpPermission>>
+      vpc: Vpc
+      tags: @mutable Optional<List<Tag>>
+    
+
+type Subnet:
+  | Subnet 
+      vpc: Vpc
+      cidrBlock: String
+      availabilityZone: Optional<AvailabilityZone>
+      defaultForAz: Optional<Bool>
+      mapPublicIpOnLaunch: Optional<Bool>
+      tags: Optional<List<Tag>>
+    
+
+type Tenancy:
+  | DefaultTenancy
+  | Dedicated
+  | HostTenancy
+
+type Volume:
+  | Volume 
+      size: Optional<Int>
+      availabilityZone: AvailabilityZone
+      tags: Optional<List<Tag>>
+      volumeType: Optional<VolumeType>
+      iops: Optional<Int>
+      encrypted: Optional<Bool>
+      snapshot: Optional<String>
+    
+
+type VolumeType:
+  | Standard
+  | Io1
+  | Gp2
+  | Sc1
+  | St1
+
+type Vpc:
+  | Vpc 
+      cidrBlock: @proto(1) String
+      tags: @mutable @proto(3) Optional<List<Tag>>
+      instanceTenancy: @proto(4) Optional<Tenancy>
+      region: @proto(5) Region
+      enableDnsSupport: @mutable Optional<Bool>
+      enableDnsHostnames: @mutable Optional<Bool>
+      dhcpOptions: @mutable @proto(2) Optional<DhcpOptions>
+    
+
+type NatGateway:
+  | NatGateway 
+      subnet: Subnet
+      elasticIP: ElasticIP
+    
+
+type Route:
+  | Route 
+      destinationCidrBlock: String
+      target: RouteTarget
+    
+
+type RouteTable:
+  | RouteTable 
+      vpc: Vpc
+      routes: Optional<List<Route>>
+      associations: Optional<List<Subnet>>
+      tags: Optional<List<Tag>>
+    
+
+type RouteTarget:
+  | GatewayTarget InternetGateway
+  | NatTarget NatGateway
+  | InterfaceTarget NotImplemented
+
+type ElasticIP:
+  | ElasticIP 
+      region: Region
+    
+

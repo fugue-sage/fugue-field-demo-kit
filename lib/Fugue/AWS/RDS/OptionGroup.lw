@@ -1,0 +1,18 @@
+import Fugue.AWS.Region as Region
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.RDS as RDS
+import Ludwig.External as External
+
+# Create a reference to an externally managed OptionGroup.
+#
+# Example usage:
+#
+#     optionGroup: RDS.OptionGroup.external("myOptions", AWS.Us-east-1)
+#
+# @arg name The name of the target OptionGroup.
+#
+# @arg region The Region containing the target OptionGroup
+#
+# @return A reference to the specified OptionGroup.
+fun external(name: String, region: AWS.Region) -> RDS.OptionGroup:
+  External.external {value: name, namespace: Region.toString(region)}

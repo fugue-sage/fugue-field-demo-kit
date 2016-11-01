@@ -1,0 +1,49 @@
+# This is the preferred interface for making CloudFront ForwardedValues
+# with Fugue. If you want to manage an CloudFront ForwardedValues with 
+# Fugue, the `new` function is the right place to start.
+
+export
+  new
+
+import Fugue.AWS.Internal.Validation as V
+import Fugue.AWS.ResourceID as ResourceID
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.CloudFront as CF
+
+# `new` CloudFront ForwardedValue (Constructor)
+#
+# Call this constructor to create a new 
+# Fugue.Core.AWS.CloudFront.ForwardedValue value.
+#
+# @arg queryString Indicates whether you want CloudFront to forward query 
+# strings to the origin that is associated with this cache behavior and cache 
+# based on the query string parameters. 
+#
+# @arg headers a list of the HTTP headers, if any, that you want CloudFront to 
+# vary upon for this cache behavior.
+#
+# @arg whitelistAllCookies Whether to whitelist all cookies or only those in the
+# whitelist
+#
+# @arg whitelistedCookieNames he whitelisted cookies, if any, that you want 
+# CloudFront to forward to your origin that is associated with this cache 
+# behavior.
+#
+# @return a Fugue.Core.AWS.CloudFront.ForwardedValue value.
+fun new {
+      queryString: Bool,
+      headers: Optional<List<String>>,
+      whitelistAllCookies: Optional<Bool>,
+      whitelistedCookieNames: Optional<List<String>>
+    } -> CF.ForwardedValues:
+  let valid: V.concat [
+    V.Success
+  ]
+  case valid of 
+    | V.Success -> CF.ForwardedValues {
+        queryString: queryString,
+        headers: headers,
+        whitelistAllCookies: whitelistAllCookies,
+        whitelistedCookieNames: whitelistedCookieNames
+      }
+    | V.Fail err -> error("Invalid ForwardedValue: " ++ err)

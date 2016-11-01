@@ -1,0 +1,75 @@
+export
+  type AWS.Region
+  equal
+  fromString
+  toString
+
+import Fugue.Core.AWS.Common as AWS
+
+# Compare two Region values for equality.
+#
+# Example:
+#
+#     ex1: AWS.Region.equal(AWS.Us-east-1, AWS.Us-west-2) # => False
+#     ex2: AWS.Region.equal(AWS.Us-west-2, AWS.Us-west-2) # => True
+#
+# @return True if the values are the same region, False otherwise.
+fun equal(this: AWS.Region, that: AWS.Region) -> Bool:
+  case (this, that) of
+    | (AWS.Ap-northeast-1, AWS.Ap-northeast-1) -> True
+    | (AWS.Ap-northeast-2, AWS.Ap-northeast-2) -> True
+    | (AWS.Ap-south-1, AWS.Ap-south-1)         -> True
+    | (AWS.Ap-southeast-1, AWS.Ap-southeast-1) -> True
+    | (AWS.Ap-southeast-2, AWS.Ap-southeast-2) -> True
+    | (AWS.Eu-central-1, AWS.Eu-central-1)     -> True
+    | (AWS.Eu-west-1, AWS.Eu-west-1)           -> True
+    | (AWS.Sa-east-1, AWS.Sa-east-1)           -> True
+    | (AWS.Us-east-1, AWS.Us-east-1)           -> True
+    | (AWS.Us-west-1, AWS.Us-west-1)           -> True
+    | (AWS.Us-west-2, AWS.Us-west-2)           -> True
+    | _                                        -> False
+
+# Convert a Region to a String.
+#
+# Example:
+#
+#     ex: AWS.Region.toString(AWS.Us-east-1) # => "us-east-1"
+#
+fun toString(region: AWS.Region) -> String:
+  case region of
+    | AWS.Ap-northeast-1 -> "ap-northeast-1"
+    | AWS.Ap-northeast-2 -> "ap-northeast-2"
+    | AWS.Ap-south-1     -> "ap-south-1"
+    | AWS.Ap-southeast-1 -> "ap-southeast-1"
+    | AWS.Ap-southeast-2 -> "ap-southeast-2"
+    | AWS.Eu-central-1   -> "eu-central-1"
+    | AWS.Eu-west-1      -> "eu-west-1"
+    | AWS.Sa-east-1      -> "sa-east-1"
+    | AWS.Us-east-1      -> "us-east-1"
+    | AWS.Us-west-1      -> "us-west-1"
+    | AWS.Us-west-2      -> "us-west-2"
+
+# Convert a region string to a Region
+#
+# Example usage:
+#
+#     ex1: AWS.Region.fromString("us-east-1")    # => Optional(AWS.Us-east-1)
+#     ex2: AWS.Region.fromString("bogus-east-1") # => None
+#
+# @arg region The string to parse.
+# @return The Region wrapped in an `Optional` or `None` if the string
+#         cannot be parsed to a valid region name.
+fun fromString(region: String) -> Optional<AWS.Region>:
+  case region of
+    | "ap-northeast-1" -> Optional(AWS.Ap-northeast-1)
+    | "ap-northeast-2" -> Optional(AWS.Ap-northeast-2)
+    | "ap-south-1"     -> Optional(AWS.Ap-south-1)
+    | "ap-southeast-1" -> Optional(AWS.Ap-southeast-1)
+    | "ap-southeast-2" -> Optional(AWS.Ap-southeast-2)
+    | "eu-central-1"   -> Optional(AWS.Eu-central-1)
+    | "eu-west-1"      -> Optional(AWS.Eu-west-1)
+    | "sa-east-1"      -> Optional(AWS.Sa-east-1)
+    | "us-east-1"      -> Optional(AWS.Us-east-1)
+    | "us-west-1"      -> Optional(AWS.Us-west-1)
+    | "us-west-2  "    -> Optional(AWS.Us-west-2)
+    | _                -> None

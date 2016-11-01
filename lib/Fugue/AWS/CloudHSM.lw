@@ -1,0 +1,6 @@
+export
+  module CloudHSM as .
+  module Hapg as Hapg
+
+import Fugue.Core.AWS.CloudHSM as CloudHSM
+import Fugue.AWS.CloudHSM.Hapg as Hapg

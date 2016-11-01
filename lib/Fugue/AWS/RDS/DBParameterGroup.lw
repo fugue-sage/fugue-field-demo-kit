@@ -1,0 +1,18 @@
+import Fugue.AWS.Region as Region
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.RDS as RDS
+import Ludwig.External as External
+
+# Create a reference to an externally managed DBParameterGroup.
+#
+# Example usage:
+#
+#     paramGroup: RDS.DBParameterGroup.external("myParameters", AWS.Us-east-1)
+#
+# @arg name The name of the target DBParameterGroup.
+#
+# @arg region The Region containing the target DBParameterGroup
+#
+# @return A reference to the specified DBParameterGroup.
+fun external(name: String, region: AWS.Region) -> RDS.DBParameterGroup:
+  External.external {value: name, namespace: Region.toString(region)}

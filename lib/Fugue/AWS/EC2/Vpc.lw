@@ -1,0 +1,146 @@
+# This is the preferred interface for making VPCs with Fugue. The
+# `new` function is the right place to start.
+
+export
+  type VpcSpec
+  default
+  equal
+  external
+  new
+
+import Fugue.AWS.EC2.DhcpOptions as DhcpOptions
+import Fugue.AWS.EC2.Tenancy as Tenancy
+import Fugue.AWS.Internal.Validation as V
+import Fugue.AWS.Region as Region
+import Fugue.AWS.ResourceID as ResourceID
+import Fugue.AWS.Tag as Tag
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.NetAddr as Net
+import Ludwig.External as External
+
+# *DEPRECATED*
+#
+# See `Fugue.AWS.EC2.Vpc.new` for the documentation on the current
+# arguments.
+type VpcSpec:
+  cidrBlock: String
+  dhcpOptions: Optional<EC2.DhcpOptions>
+  tags: Optional<List<AWS.Tag>>
+  instanceTenancy: Optional<EC2.Tenancy>
+  region: AWS.Region
+  enableDnsSupport: Optional<Bool>
+  enableDnsHostnames: Optional<Bool>
+
+# `new` VPC (Constructor)
+#
+# Call this constructor to create a new Fugue.AWS.EC2.Vpc value.
+#
+# Example usage:
+#
+#     production-vpc: EC2.Vpc.new {
+#       cidrBlock: "10.0.0.0/16",
+#       tags: [],
+#       instanceTenancy: EC2.DefaultTenancy,
+#       region: AWS.Us-west-2,
+#       dhcpOptions: None
+#     }
+#
+# @arg cidrBlock The network address space the VPC should
+# encompass. This value is validated at compile time by the
+# constructor, and must be a string written in CIDR notation. For more
+# information see:
+# https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation
+#
+# @arg dhcpOptions A DhcpOptions record, describing DHCP options for
+# the VPC's operation.
+#
+# @arg tags AWS tag key-value pairs to associate with the VPC.
+#
+# @arg instanceTenancy This controls whether or not instances can only
+# be launched with a certain tenancy value. `DefaultTenancy` allows
+# instances to be launched with any tenancy. `Dedicated` and
+# `HostTenancy` constrain instance launches to these tenancy values.
+#
+# @arg region The AWS region in which the VPC should be created.
+#
+# @arg enableDnsSupport Set to True to enable DNS support
+#
+# @arg enableDnsHostnames Set to True to enable DNS hostnames.  This
+# can only be enabled if enableDnsSupport is also True
+#
+# @return A Fugue.Core.AWS.EC2.Vpc value.
+fun new {
+      cidrBlock: String,
+      dhcpOptions: Optional<EC2.DhcpOptions>,
+      tags: Optional<List<AWS.Tag>>,
+      instanceTenancy: Optional<EC2.Tenancy>,
+      region: AWS.Region,
+      enableDnsSupport: Optional<Bool>,
+      enableDnsHostnames: Optional<Bool>
+    } -> EC2.Vpc:
+  let valid: V.concat [
+    validateCidr(cidrBlock),
+    validateDnsAttributes(enableDnsSupport, enableDnsHostnames),
+  ]
+  case valid of
+    | V.Fail err -> error("Invalid Vpc: " ++ err)
+    | V.Success  -> EC2.Vpc {
+                      cidrBlock: cidrBlock,
+                      tags: tags,
+                      instanceTenancy: instanceTenancy,
+                      region: region,
+                      dhcpOptions: Optional.unpack(DhcpOptions.defaultForRegion(region), dhcpOptions),
+                      enableDnsSupport: Optional.unpack(True, enableDnsSupport),
+                      enableDnsHostnames: Optional.unpack(False, enableDnsHostnames),
+                    }
+
+
+# **DEPRECATED**: Use of `Fugue.AWS.EC2.default` is no longer
+# required. It will be removed in a future release.
+default: {}
+
+V.Validation validateCidr(String cidr):
+  case Net.Cidr.fromString(cidr) of
+    | None       -> V.Fail(String.concat("Invalid cidrBlock: '", String.concat(cidr, "'")))
+    | Optional x -> if x.mask >= 16 && x.mask <= 28 then V.Success
+                    else V.Fail("cidrBlock size must be between a /28 and /16 netmask.")
+
+V.Validation validateDnsAttributes(Optional<Bool> enableDnsSupport, Optional<Bool> enableDnsHostnames):
+  let dnsSupport: Optional.unpack(False, enableDnsSupport)
+  let dnsHostnames: Optional.unpack(False, enableDnsHostnames)
+  if dnsHostnames && !dnsSupport then
+    V.Fail("enableDnsSupport must be True if enableDnsHostnames is True.")
+  else V.Success
+
+Bool equal(EC2.Vpc this, EC2.Vpc that):
+  let vpc1: this.(EC2.Vpc)
+  let vpc2: that.(EC2.Vpc)
+  let optListEq: fun(o1, o2, test): Optional.equal(o1, o2, fun(x, y): List.equal(x, y, test))
+  let boolEq: fun(x, y): (x && y) || !(x || y)
+  List.all(fun(x): x, [
+    String.equal(vpc1.cidrBlock, vpc2.cidrBlock),
+    Optional.equal(vpc1.dhcpOptions, vpc2.dhcpOptions, DhcpOptions.equal),
+    optListEq(vpc1.tags, vpc2.tags, Tag.equal),
+    Optional.equal(vpc1.instanceTenancy, vpc2.instanceTenancy, Tenancy.equal),
+    Region.equal(vpc1.region, vpc2.region),
+    Optional.equal(vpc1.enableDnsSupport, vpc2.enableDnsSupport, boolEq),
+    Optional.equal(vpc1.enableDnsHostnames, vpc2.enableDnsHostnames, boolEq),
+  ])
+
+# Create a reference to an externally managed Vpc.
+#
+# Example usage:
+#
+#     vpc: EC2.Vpc.external("vpc-1234abcd", AWS.Us-east-1)
+#
+# @arg vpcId The ID of the target VPC. Must be of the form "vpc-"
+#            followed by 8 characters from a-z and 0-9.
+#
+# @arg region The Region containing the target VPC.
+#
+# @return A reference to the specified VPC.
+fun external(vpcId: String, region: AWS.Region) -> EC2.Vpc:
+  ResourceID.external(vpcId, region, "vpc")
+
+

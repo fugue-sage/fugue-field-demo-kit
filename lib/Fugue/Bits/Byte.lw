@@ -1,0 +1,71 @@
+import Fugue.Bits.Bit as Bit
+
+# A Byte is eight Bits.
+type Byte:
+  _0: Bit.Bit
+  _1: Bit.Bit
+  _2: Bit.Bit
+  _3: Bit.Bit
+  _4: Bit.Bit
+  _5: Bit.Bit
+  _6: Bit.Bit
+  _7: Bit.Bit
+
+# Perform bitwise and of two Bytes.
+Byte and(Byte x, Byte y): {
+  _0: Bit.and(x._0, y._0),
+  _1: Bit.and(x._1, y._1),
+  _2: Bit.and(x._2, y._2),
+  _3: Bit.and(x._3, y._3),
+  _4: Bit.and(x._4, y._4),
+  _5: Bit.and(x._5, y._5),
+  _6: Bit.and(x._6, y._6),
+  _7: Bit.and(x._7, y._7)
+}
+
+# Convert an Int to a Byte.
+#
+# @arg x The Int to convert. Must be between 0 and 255.
+# @return The Byte representation of x.
+#
+Byte fromInt(Int x):
+  if x > 255 || x < 0 then error("Bytes can only store values between 0 and 255.")
+  else {
+    _0: Bit.fromInt(x % 2),
+    _1: Bit.fromInt((x / 2) % 2),
+    _2: Bit.fromInt((x / 4) % 2),
+    _3: Bit.fromInt((x / 8) % 2),
+    _4: Bit.fromInt((x / 16) % 2),
+    _5: Bit.fromInt((x / 32) % 2),
+    _6: Bit.fromInt((x / 64) % 2),
+    _7: Bit.fromInt((x / 128) % 2)
+  }
+
+# Convert a Byte to a String.
+#
+# @arg x The Byte to convert.
+# @return The binary representation of the Byte as a String.
+#
+# Example:
+#
+#    bits: Byte.toString(Byte.fromInt(255)) # => "11111111"
+#
+String toString(Byte x):
+  let bits:  [x._7, x._6, x._5, x._4, x._3, x._2, x._1, x._0]
+  List.fold(String.concat, "", List.map(Bit.toString, bits))
+
+# Compare two Bytes for equality.
+#
+# @arg x
+# @arg y
+# @return True if x and y are equal. False otherwise.
+#
+Bool eq(Byte x, Byte y):
+  Bit.eq(x._0, y._0) &&
+  Bit.eq(x._1, y._1) &&
+  Bit.eq(x._2, y._2) &&
+  Bit.eq(x._3, y._3) &&
+  Bit.eq(x._4, y._4) &&
+  Bit.eq(x._5, y._5) &&
+  Bit.eq(x._6, y._6) &&
+  Bit.eq(x._7, y._7)

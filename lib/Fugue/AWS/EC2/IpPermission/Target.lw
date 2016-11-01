@@ -1,0 +1,91 @@
+export
+  all
+  ipRange
+  ipRanges
+  securityGroup
+  securityGroups
+  subnet
+  subnets
+
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.NetAddr as Net
+
+# IP Permission Target (Constructor)
+#
+# Example usage:
+#
+#     target: EC2.IpPermission.Target.ipRanges(["0.0.0.0/0"])
+#
+# @arg ips A list of CIDR-notated IP ranges.
+#
+# @return A Fugue.Core.AWS.EC2.IpPermissionTarget, for use in
+# `SecurityGroup` rules.
+fun ipRanges(ips: List<String>) -> EC2.IpPermissionTarget:
+  let ranges: List.map(fun(x): EC2.IpRange({cidrIp: x}), ips)
+  EC2.IpRanges(ranges)
+
+# Create an IpPermissionTarget from a single IP range.
+#
+# Example usage:
+#
+#     target: EC2.IpPermission.Target.ipRange("8.8.8.8/24")
+#
+# @arg cidr The IP range in CIDR notation.
+#
+# @return An EC2.IpPermissionTarget.
+fun ipRange(cidr: String) -> EC2.IpPermissionTarget: ipRanges([cidr])
+
+# An IpPermissionTarget that matches all IPv4 addresses.
+#
+EC2.IpPermissionTarget all: ipRanges(["0.0.0.0/0"])
+
+# Create an IpPermissionTarget from a list of Subnets.
+#
+# The created target will have an IP range corresponding to the CIDR
+# block of each subnet.
+#
+# Example usage:
+#
+#     target: EC2.IpPermission.Target.subnets([my-subnet1, my-subnet2])
+#
+# @arg nets The subnets to target.
+#
+# @return An EC2.IpPermissionTarget.
+fun subnets(nets: List<EC2.Subnet>) -> EC2.IpPermissionTarget:
+  let unpack: fun(s): case s of | EC2.Subnet x -> x.cidrBlock
+  ipRanges(List.map(unpack, nets))
+
+# Create an IpPermissionTarget from a subnet.
+#
+# The created target will have an IP range corresponding to the CIDR
+# block of the specified subnet.
+#
+# Example usage:
+#
+#     target: EC2.IpPermission.Target.subnet(my-subnet)
+#
+# @arg net The subnet to target.
+#
+# @return An EC2.IpPermissionTarget.
+fun subnet(net: EC2.Subnet) -> EC2.IpPermissionTarget:
+  let unpack: fun(s): case s of | EC2.Subnet x -> x.cidrBlock
+  ipRange(unpack(net))
+
+# IP Permission Target (Constructor)
+#
+# @arg groups A list of Security Groups.
+#
+# @return A Fugue.Core.AWS.EC2.IpPermissionTarget, for use in
+# `SecurityGroup` rules.
+fun securityGroups(groups: List<EC2.SecurityGroup>) -> EC2.IpPermissionTarget: EC2.SecurityGroups(groups)
+
+# Create an IpPermissionTarget from a single SecurityGroup.
+#
+# Example usage:
+#
+#     target: EC2.IpPermission.Target.securityGroup(my-group)
+#
+# @arg group The security group to target
+#
+# @return An EC2.IpPermissionTarget.
+fun securityGroup(group: EC2.SecurityGroup) -> EC2.IpPermissionTarget: securityGroups([group])

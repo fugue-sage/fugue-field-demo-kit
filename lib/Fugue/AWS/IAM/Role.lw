@@ -1,0 +1,97 @@
+export
+  type Spec
+  default
+  external
+  new
+
+import Fugue.Core.AWS.IAM as IAM
+import Ludwig.External as External
+
+# IAM Role Specification
+#
+# This type of value specifies an IAM role, an AWS identity that delegates
+# permission policies to whatever entity assumes the role. 
+#
+# @field roleName The name of the role.
+#
+# @field assumeRolePolicyDocument Policy allowing a user, service, or
+#                                 federated service to assume this
+#                                 role.
+#
+# You may alternatively attach the assumeRolePolicyDocument policy as an 
+# external JSON document, using the readFileUtf8() method. Files are relative
+# to the directory in which the lwc compiler is run, unless an absolute path
+# is specified.
+#
+# Example usage:
+#
+#     assumeRolePolicyDocument: String.readFileUtf8("policy/my-policy.json")
+#
+# @field rolePolicies A list of policy values to attach to this role.
+type Spec:
+  roleName: String
+  assumeRolePolicyDocument: String
+  rolePolicies: Optional<List<IAM.Policy>>
+
+# IAM Role Specification Defaults
+#
+# These are the default values for an IAM role created with the IAM role
+# constructor, IAM.Role(). If these values are provided to the
+# constructor, the default values are overwritten. The default values are:
+#
+# - `rolePolicies`: `None`, meaning no policies are attached to the role.
+#
+default: {
+  rolePolicies: None
+}
+
+# Role Constructor
+#
+# Call this constructor to create a new Fugue.AWS.IAM.Role value.
+#
+# Example usage:
+#
+#     import Fugue.AWS.IAM as IAM
+#     
+#     myPolicy: IAM.Policy.new {
+#       policyName: "my-policy",
+#       policyDocument: '{
+#       "Version": "2012-10-17",
+#       "Statement": {
+#         "Effect": "Allow",
+#         "Action": "s3:ListBucket",
+#         "Resource": "arn:aws:s3:::*"
+#       }
+#     }',
+#     }
+#     
+#     myRole: IAM.Role.new {
+#       roleName: "my-role",
+#       rolePolicies: [myPolicy],
+#       assumeRolePolicyDocument: '{
+#       "Version": "2012-10-17",
+#       "Statement": {
+#         "Effect": "Allow",
+#         "Principal": {"Service": "ec2.amazonaws.com"},
+#         "Action": "sts:AssumeRole"
+#       }
+#     }',
+#     }
+#
+# @arg spec An IAM Role record.
+# @return A Fugue.AWS.IAM.Role record.
+fun new(spec: Spec) -> IAM.Role: IAM.Role(spec)
+
+# Create a reference to an externally managed Role.
+#
+# Example usage:
+#
+#     role: IAM.Role.external("MyRole")
+#
+# @arg name The name of the target Role. Maximum length of 64
+#           characters. May include any non white space alphanumeric
+#           characters as well as `=`, `,`, `.`, `@`, and `-`.
+#
+# @return A reference to the specified Role.
+fun external(name: String) -> IAM.Role:
+  External.external {value: name, namespace: "global"}

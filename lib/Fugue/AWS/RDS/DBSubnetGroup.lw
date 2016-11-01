@@ -1,0 +1,86 @@
+export
+  type Spec
+  default
+  external
+  new
+
+import Fugue.AWS.Region as Region
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.Core.AWS.RDS as RDS
+import Ludwig.External as External
+
+# @field name The name of the DBSubnetGroup. Must be a lowercase
+#             string of at most 255 alphanumeric characters. The
+#             following characters may not be used: `.`, `_`, ` `, and
+#             `-`. Cannot be `"default"`.
+#
+# @field description The description of the DBSubnetGroup.
+#
+# @field subnets The list of subnets to include. Must contain subnets
+#                in two availability zones of the region.
+#
+# @field tags An optional list of tags to apply to the DBSubnetGroup.
+type Spec:
+  name: String
+  description: String
+  subnets: List<EC2.Subnet>
+  tags: Optional<List<AWS.Tag>>
+
+# Defaults for RDS DBSubnetGroups.
+#
+# - `tags`: `None`, meaning no tags are applied.
+default: {
+  tags: None
+}
+
+# Create a new DBSubnetGroup.
+#
+# Example:
+#
+#     import Fugue.AWS.Pattern.Network as Network
+#     import Fugue.AWS.RDS as RDS
+#     import Fugue.Core.AWS.Common as AWS
+#     
+#     net: Network.new({
+#       name: "EXAMPLE",
+#       cidr: "10.42.0.0/16",
+#       region: AWS.Us-east-1,
+#       publicSubnets: [
+#         (AWS.B, "10.42.12.0/24"),
+#         (AWS.C, "10.42.13.0/24")
+#       ],
+#       privateSubnets: [
+#         (AWS.B, "10.42.22.0/24"),
+#         (AWS.C, "10.42.23.0/24")
+#       ]
+#     })
+#     
+#     dbSubnetGroup: RDS.DBSubnetGroup.new {
+#       name: "private",
+#       description: "private subnets",
+#       subnets: net.privateSubnets,
+#       tags: [AWS.Tag {key: "network", value: "private"}]
+#     }
+#
+# @arg spec The specification for the DBSubnetGroup.
+# @return The DBSubnetGroup.
+fun new(spec: Spec) -> RDS.DBSubnetGroup: RDS.DBSubnetGroup {
+  dbSubnetGroupName: spec.name,
+  dbSubnetGroupDescription: spec.description,
+  subnets: spec.subnets,
+  tags: spec.tags,
+}
+
+# Create a reference to an externally managed DBSubnetGroup.
+#
+# Example usage:
+#
+#     dbsubnets: RDS.DBSubnetGroup.external("test-sn-group", AWS.Us-east-1)
+#
+# @arg name The name of the target DBSubnetGroup.
+# @arg region The Region containing the target DBSubnetGroup.
+#
+# @return A reference to the specified DBSubnetGroup.
+fun external(name: String, region: AWS.Region) -> RDS.DBSubnetGroup:
+  External.external {value: name, namespace: Region.toString(region)}

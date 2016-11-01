@@ -1,0 +1,65 @@
+# This is the preferred interface for making VPC routes with
+# Fugue. The `new` function is the right place to start.
+
+export
+  type RouteSpec
+  new
+  module Target as Target
+
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.NetAddr as Net
+import Fugue.AWS.EC2.Route.Target as Target
+
+# `new` Route (Constructor)
+#
+# Call this constructor to create a new Fugue.AWS.EC2.Route value.
+#
+# Example usage:
+#
+#     publicRoute: EC2.Route.new {
+#       destinationCidrBlock: "0.0.0.0/0",
+#       target: EC2.GatewayTarget(igw)
+#     }
+#
+# @arg spec A RouteSpec record.
+# @return A Fugue.Core.AWS.EC2.Route record.
+fun new(spec: RouteSpec) -> EC2.Route:
+  if isValid(spec) then EC2.Route(spec)
+  else error("Invalid RouteSpec")
+
+# Route Specification (Resource)
+#
+# This type of value is used to specify a Route for the Route constructor, EC2.Route.`new`().
+#
+# @field destinationCidrBlock The CIDR block of routing requests that should follow this route.
+# @field target The target for this route.
+type RouteSpec:
+  destinationCidrBlock: String
+  target: EC2.RouteTarget
+
+# (isValidCidr) Test
+#
+# *NOTE:* This is a private function, and cannot be used outside of this module.
+#
+# This function can be used to test the validity of a CIDR block.
+#
+# @arg cidr A CIDR block expressed with valid notation. For more information, see:
+# https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation
+# @return Bool
+fun isValidCidr(cidr: String) -> Bool:
+  case Net.Cidr.fromString(cidr) of
+    | None -> error(String.concat("Invalid destinationCidrBlock: '", String.concat(cidr, "'")))
+    | _    -> True
+
+# (isValid) Test
+#
+# *NOTE:* This is a private function, and cannot be used outside of this module.
+#
+# This function can be used to test the validity of a Route record. It is automatically used by the Route
+# constructor function.
+#
+# @arg spec A RouteSpec record.
+# @return Bool
+fun isValid(spec: RouteSpec) -> Bool: isValidCidr(spec.destinationCidrBlock     )
+
+

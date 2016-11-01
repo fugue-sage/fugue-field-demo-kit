@@ -1,0 +1,44 @@
+export
+  new
+
+import Fugue.AWS.Route53.ResourceRecordSet.Base as ResourceRecordSet
+import Fugue.Core.AWS.Route53 as Route53
+
+# Create a new AAAA ResourceRecordSet.
+#
+# Example usage:
+#
+#     import Fugue.AWS.Route53 as Route53
+#     
+#     zone: Route53.HostedZone.external("12345679ABCDEF")
+#     
+#     aaaa: Route53.ResourceRecordSet.AAAA.new {
+#       name: "foo.example.com",
+#       values: [
+#         "2001:0db8:85a3:0:0:8a2e:0370:7334",
+#         "2001:0db8:85a3:0:0:8a2e:0370:7335"
+#       ],
+#       ttl: 60,
+#       hostedZone: zone
+#     }
+#
+# @arg name The fully qualified domain name of the record set.
+#
+# @arg values The list of IPv6 addresses that name resolves to.
+#
+# @arg ttl The time to live in seconds.
+#
+# @arg hostedZone The hosted zone to create the record in.
+fun new {
+      name: String,
+      values: List<String>,
+      ttl: Int,
+      hostedZone: Route53.HostedZone
+    } -> Route53.ResourceRecordSet:
+  ResourceRecordSet.new {
+    name: name,
+    recordType: Route53.AAAA,
+    ttl: ttl,
+    hostedZone: hostedZone,
+    resourceRecords: values,
+  }

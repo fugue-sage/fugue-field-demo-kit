@@ -1,0 +1,59 @@
+export
+  module Ip as IpAddress
+
+  type Cidr
+  type Ip.IpAddress
+
+  fromString
+  include
+  toString
+
+
+import Fugue.Bits.Word as Word
+import Ludwig.Int as Int
+import Fugue.NetAddr.IpAddress as Ip
+
+type Cidr:
+  network: Ip.IpAddress
+  mask: Int
+
+String toString(Cidr cidr):
+  let network: Ip.toString(cidr.network)
+  let mask: Int.toString(cidr.mask)
+  String.concat(network, String.concat("/", mask))
+
+Bool isValidNetworkForMask(Cidr cidr):
+  let network: ipToWord(cidr.network)
+  let mask: maskToWord(cidr.mask)
+  Word.eq(Word.and(network, mask), network)
+
+Bool isValid(Cidr cidr):
+  if cidr.mask >= 0 && cidr.mask <= 32 then isValidNetworkForMask(cidr)
+  else False
+
+Optional<Cidr> fromString(String cidr):
+  let split: String.split("/", cidr)
+  if List.length(split) == 2 then
+    case (Ip.fromString(List.elementAt(0, split)), String.toInt(List.elementAt(1, split))) of
+      | (Optional network, Optional mask) -> let candidate: {network: network, mask: mask}
+                                             if isValid(candidate) then Optional(candidate)
+                                             else None
+      | _                                 -> None
+  else None
+
+Int lshift(Int x, Int shift): x * (2 ^ shift)
+
+Int ipToInt(Ip.IpAddress ip):
+  lshift(ip._1, 24) + lshift(ip._2, 16) + lshift(ip._3, 8) + ip._4
+
+Word.Word maskToWord(Int mask): Word.fromInt(lshift(4294967295, 32 - mask) % 4294967296)
+
+Word.Word ipToWord(Ip.IpAddress ip): Word.fromInt(ipToInt(ip))
+
+Bool include(Ip.IpAddress addr, Cidr network):
+  let ip: ipToWord(addr)
+  let net: ipToWord(network.network)
+  let mask: maskToWord(network.mask)
+  let maskedIp: Word.and(ip, mask)
+  let maskedNet: Word.and(net, mask)
+  Word.eq(maskedIp, maskedNet)

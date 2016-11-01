@@ -1,0 +1,49 @@
+# This is the preferred interface for making CloudFront GeoRestriction
+# with Fugue. If you want to manage an CloudFront GeoRestriction with 
+# Fugue, the `new` function is the right place to start.
+
+export
+  new
+
+import Fugue.AWS.Internal.Validation as V
+import Fugue.Core.AWS.CloudFront as CF
+
+# `new` CloudFront GeoRestriction (Constructor)
+#
+# @arg restrictionType The method that you want to use to restrict distribution
+# of your content by country:
+#
+# - None No georestriction is enabled, meaning access to content is not 
+#   restricted by client geolocation.
+#
+# - CF.Blacklist The Location elements specify the countries in which you do
+#   not want CloudFront to distribute your content.
+#
+# - CF.Whitelist The Location elements specify the countries in which you want
+#   CloudFront to distribute your content.
+#
+# @arg items A complex type that contains a Location element for each country
+# in which you want CloudFront either to distribute your content (whitelist) or
+# not distribute your content (blacklist). The Location element is a 
+# two-letter, uppercase country code for a country that you want to include in
+# your blacklist or whitelist. Include one Location element for each country.
+# CloudFront and MaxMind both use ISO 3166 country codes. For the current list
+# of countries and the corresponding codes, see ISO 3166-1-alpha-2 code on the
+# International Organization for Standardization website. You can also refer to
+# the country list in the CloudFront console, which includes both country names
+# and codes.
+#
+# @return a Fugue.Core.AWS.CloudFrom.GeoRestriction value.
+fun new {
+      restrictionType: CF.GeoRestrictionType,
+      items: List<String>
+    } -> CF.GeoRestriction:
+  let valid: V.concat [
+    V.Success
+  ]
+  case valid of
+    | V.Success -> CF.GeoRestriction {
+        restrictionType: restrictionType,
+        items: items,
+      }
+    | V.Fail err -> error("Invalid GeoRestriction: " ++ err)

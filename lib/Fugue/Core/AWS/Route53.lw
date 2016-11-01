@@ -1,0 +1,72 @@
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.ELB as ELB
+import Fugue.Core.AWS.S3 as S3
+
+type AliasTarget:
+  | ResourceRecordSetAliasTarget 
+      resourceRecordSet: ResourceRecordSet
+      evaluateTargetHealth: Bool
+    
+  | LoadBalancerAliasTarget 
+      loadBalancer: ELB.LoadBalancer
+      evaluateTargetHealth: Bool
+    
+  | S3AliasTarget 
+      bucket: S3.Bucket
+      evaluateTargetHealth: Bool
+    
+  | CloudFrontAliasTarget AWS.NotImplemented
+  | ElasticBeanstalkAliasTarget AWS.NotImplemented
+  | ExternalAliasTarget 
+      dnsName: String
+      hostedZone: HostedZone
+      evaluateTargetHealth: Bool
+    
+
+type Failover:
+  | PRIMARY
+  | SECONDARY
+
+type GeoLocation:
+  | GeoLocation 
+      continentCode: Optional<String>
+      countryCode: Optional<String>
+      subdivisionCode: Optional<String>
+    
+
+type ResourceRecord:
+  | ResourceRecord 
+      value: String
+    
+
+type ResourceRecordSet:
+  | ResourceRecordSet 
+      name: String
+      type: ResourceRecordSetType
+      setIdentifier: Optional<String>
+      weight: Optional<Int>
+      region: Optional<AWS.Region>
+      geoLocation: Optional<GeoLocation>
+      failover: Optional<Failover>
+      ttl: Optional<Int>
+      resourceRecords: List<ResourceRecord>
+      aliasTarget: Optional<AliasTarget>
+      healthCheckIdentifier: Optional<String>
+      hostedZone: HostedZone
+    
+
+type ResourceRecordSetType:
+  | SOA
+  | A
+  | TXT
+  | NS
+  | CNAME
+  | MX
+  | PTR
+  | SRV
+  | SPF
+  | AAAA
+
+type HostedZone:
+  | HostedZone AWS.ExternalOnly
+

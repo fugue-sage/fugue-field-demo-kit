@@ -1,0 +1,78 @@
+export
+  type Spec
+  external
+  new
+
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS.Region as Region
+import Fugue.Core.AWS.Elasticache as Elasticache
+import Ludwig.External as External
+
+# CacheSubnetGroup Specification
+#
+#
+# @field name The name of the CacheSubnetGroup. A string of up to 255
+#             lowercase alphanumeric characters. May include `-`.
+#
+# @field description Description of the CacheSubnetGroup.
+#
+# @field subnets The list of Subnets to include in the
+#                CacheSubnetGroup.
+type Spec:
+  name: String
+  description: String
+  subnets: List<EC2.Subnet>
+
+# CacheSubnetGroup Constructor
+#
+# Call this constructor to create a new
+# Fugue.AWS.Elasticache.CacheSubnetGroup value.
+#
+# Example usage:
+#
+#     import Fugue.AWS.Elasticache as Elasticache
+#     import Fugue.AWS.Pattern.Network as Network
+#     import Fugue.Core.AWS.Common as AWS
+#     
+#     net: Network.new({
+#       name: "EXAMPLE",
+#       cidr: "10.42.0.0/16",
+#       region: AWS.Us-east-1,
+#       publicSubnets: [
+#         (AWS.B, "10.42.12.0/24"),
+#         (AWS.C, "10.42.13.0/24")
+#       ],
+#       privateSubnets: [
+#         (AWS.B, "10.42.22.0/24"),
+#         (AWS.C, "10.42.23.0/24")
+#       ]
+#     })
+#     
+#     subnetGroup: Elasticache.CacheSubnetGroup.new {
+#       name: "private",
+#       description: "private subnets",
+#       subnets: net.privateSubnets,
+#     }
+#
+# @arg spec A CacheSubnetGroup specification.
+# @return A CacheSubnetGroup value.
+fun new(spec: Spec) -> Elasticache.CacheSubnetGroup:
+  Elasticache.CacheSubnetGroup {
+    cacheSubnetGroupName: spec.name,
+    cacheSubnetGroupDescription: spec.description,
+    subnets: spec.subnets,
+  }
+
+# Create a reference to an externally managed CacheSubnetGroup.
+#
+# Example usage:
+#
+#     subnets: Elasticache.CacheSubnetGroup.external("MySubnets", AWS.Us-east-1)
+#
+# @arg name The name of the target CacheSubnetGroup.
+#
+# @arg region The region containing the target CacheSubnetGroup.
+#
+# @return A reference to the specified CacheSubnetGroup.
+fun external(name: String, region: Region.Region) -> Elasticache.CacheSubnetGroup:
+  External.external {value: name, namespace: Region.toString(region)}

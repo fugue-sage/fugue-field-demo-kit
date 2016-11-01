@@ -1,0 +1,35 @@
+# This is the preferred interface for making CloudFront CustomHeaders
+# with Fugue. If you want to manage an CloudFront CustomHeaders with Fugue, the
+# `new` function is the right place to start.
+
+export
+  new
+
+import Fugue.AWS.Internal.Validation as V
+import Fugue.AWS.ResourceID as ResourceID
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.CloudFront as CF
+
+# `new` CloudFront CustomHeader (Constructor)
+#
+# Call this constructor to create a new 
+# Fugue.Core.AWS.CloudFront.CustomHeader value.
+#
+# @arg headerName The header's name.
+#
+# @arg headerValue The header's value.
+#
+# @return a Fugue.Core.AWS.CloudFront.CustomHeader value.
+fun new {
+        headerName: String,
+        headerValue: String
+    } -> CF.CustomHeader:
+  let valid: V.concat [
+    V.Success
+  ]
+  case valid of 
+    | V.Success -> CF.CustomHeader {
+        headerName: headerName,
+        headerValue: headerValue
+      }
+    | V.Fail err -> error("Invalid CustomHeader: " ++ err)

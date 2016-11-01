@@ -1,0 +1,51 @@
+# This is the preferred interface for making Internet Gateway
+# resources with Fugue. If you want to manage an Internet Gateway with
+# Fugue, the `new` function is the right place to start.
+
+export
+  type InternetGatewaySpec
+  default
+  new
+
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.EC2 as EC2
+
+# `new` Internet Gateway (Constructor)
+#
+# Use this constructor to create a new Fugue.AWS.EC2.InternetGateway value.
+#
+# Example usage:
+#
+#     EC2.InternetGateway.new {
+#       region: AWS.Us-west-2,
+#       vpc: mvc-instance-vpc,
+#       tags: [mvc-instance-tag]
+#     }
+#
+# @arg spec An InternetGatewaySpec record.
+# @return A Fugue.Core.AWS.EC2.InternetGateway record.
+fun new(spec: InternetGatewaySpec) -> EC2.InternetGateway:
+  EC2.InternetGateway(spec with {
+    region: case spec.vpc of | EC2.Vpc v -> v.region
+  })
+
+# Internet Gateway Specification (Resource)
+#
+# This type of value is used to specify an Internet Gateway (IGW) for
+# the IGW constructor, EC2.InternetGateway.`new`().
+#
+# @field tags: AWS tag key-value pairs to associate with the Internet Gateway.
+# @field vpc: The VPC with which to associate the Internet Gateway.
+type InternetGatewaySpec:
+  tags: Optional<List<AWS.Tag>>
+  vpc: EC2.Vpc
+
+# Internet Gateway Specification (Default Values)
+#
+# These are the default values for an Internet Gateway (IGW) created
+# with the IGW constructor, EC2.InternetGateway(). If these values are
+# provided to the constructor, they are overridden. The values
+# are:
+default: {
+  tags: None
+}

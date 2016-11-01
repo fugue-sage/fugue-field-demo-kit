@@ -1,0 +1,10 @@
+export
+  module Elasticache as .
+  module CacheCluster as CacheCluster
+  module CacheSubnetGroup as CacheSubnetGroup
+  module ReplicationGroup as ReplicationGroup
+
+import Fugue.AWS.Elasticache.CacheCluster as CacheCluster
+import Fugue.AWS.Elasticache.CacheSubnetGroup as CacheSubnetGroup
+import Fugue.AWS.Elasticache.ReplicationGroup as ReplicationGroup
+import Fugue.Core.AWS.Elasticache as Elasticache

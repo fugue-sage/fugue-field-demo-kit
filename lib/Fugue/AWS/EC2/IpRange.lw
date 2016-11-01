@@ -1,0 +1,41 @@
+# This is the preferred interface for making IP ranges for security
+# groups rules with Fugue. The `new` function is the right place to
+# start.
+
+export
+  all
+  new
+
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.NetAddr as Net
+
+# `new` IP Range (Constructor)
+#
+# This constructor provides validation and type construction for a CIDR
+# range.
+#
+# Example usage:
+#
+#     EC2.IpRange.new {
+#       cidrIp: "0.0.0.0/0"
+#     }
+#
+# @arg cidrIp A CIDR range.
+#
+# @return A Fugue.Core.AWS.EC2.IpRange value.
+fun new {cidrIp: String} -> EC2.IpRange:
+  case Net.Cidr.fromString(cidrIp) of
+    | Optional addr -> EC2.IpRange {cidrIp: cidrIp}
+    | None          -> error "Invalid IpRange"
+
+# For convenience, an IpRange covering all of the IPv4 address space
+# (0.0.0.0/0).
+#
+# You can use similar code to have named ranges to use in your
+# compositions.
+# For example:
+#
+#     inMyVpc: EC2.IpRange.new {cidrIp: "10.0.0.1/16"}
+#     publicSubnet: EC2.IpRange.new {cidrIp: "10.0.1.1/24"}
+
+all: new {cidrIp: "0.0.0.0/0"}

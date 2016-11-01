@@ -1,0 +1,111 @@
+# This is the preferred interface for making DHCP Options resources
+# with Fugue. If you want to manage DHCP Options with Fugue, the `new`
+# function is the right place to start.
+
+export
+  default
+  defaultForRegion
+  equal
+  new
+  type Spec
+
+import Fugue.AWS.EC2.NetBiosNodeType as NetBiosNodeType
+import Fugue.AWS.Region as Region
+import Fugue.AWS.Tag as Tag
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.EC2 as EC2
+
+# `new` DHCP Options (Constructor)
+#
+# Call this constructor to create a new
+# Fugue.Core.AWS.EC2.DhcpOptions value.
+#
+# @arg spec An DHCP Options specification record.
+# @return A
+# Fugue.Core.AWS.EC2.DhcpOptions value.
+fun new(spec: Spec) -> EC2.DhcpOptions: EC2.DhcpOptions(spec)
+
+# DHCP Options Specification (Resource)
+#
+# Example usage:
+#
+#     mvc-dhcp-options: EC2.DhcpOptions.new {
+#       tags: [mvc-app-tag],
+#       domainNameServers: ["5.5.5.5"],
+#       domainName: "fugue.co",
+#       ntpServers: ["6.6.6.6"],
+#       netBiosNameServers: ["7.7.7.7"],
+#       netBiosNodeType: EC2.MNode,
+#       region: AWS.Us-west-2
+#     }
+#
+# @field tags Key-value pair tags to apply to the DHCP Options set.
+#
+# @field domainNameServers The IP (IPv4) address of a domain name
+# server.  You can specify up to four addresses.
+#
+# @field domainName A domain name of your choice.
+#
+# @field ntpServers The IP address (IPv4) of a Network Time Protocol
+# (NTP) server. You can specify up to four addresses.
+#
+# @field netbiosNameServers The IP address (IPv4) of a NetBIOS name server.
+# You can specify up to four addresses. 
+#
+# @field netbiosNodeType One of an enumeration of NetBIOS node types.
+type Spec:
+  tags: Optional<List<AWS.Tag>>
+  domainNameServers: Optional<List<String>>
+  domainName: Optional<String>
+  ntpServers: Optional<List<String>>
+  netBiosNameServers: Optional<List<String>>
+  netBiosNodeType: Optional<EC2.NetBiosNodeType>
+  region: AWS.Region
+
+# DHCP Options Specification (Default Values)
+default: {
+  tags: None,
+  domainNameServers: None,
+  domainName: None,
+  ntpServers: None,
+  netBiosNameServers: None,
+  netBiosNodeType: None,
+}
+
+fun unpack(dhcp: EC2.DhcpOptions) -> Spec: case dhcp of | EC2.DhcpOptions d -> d
+
+fun equal(this: EC2.DhcpOptions, that: EC2.DhcpOptions) -> Bool:
+  let dhcp1: unpack(this)
+  let dhcp2: unpack(that)
+  let fun optListEq(o1: Optional<List<a>>, o2: Optional<List<a>>, test: fun(a, a) -> Bool) -> Bool:
+    Optional.equal(o1, o2, fun(x, y): List.equal(x, y, test))
+
+  List.all(fun(x): x, [
+    optListEq(dhcp1.tags, dhcp2.tags, Tag.equal),
+    optListEq(dhcp1.domainNameServers, dhcp2.domainNameServers, String.equal),
+    Optional.equal(dhcp1.domainName, dhcp2.domainName, String.equal),
+    optListEq(dhcp1.ntpServers, dhcp2.ntpServers, String.equal),
+    optListEq(dhcp1.netBiosNameServers, dhcp2.netBiosNameServers, String.equal),
+    Optional.equal(dhcp1.netBiosNodeType, dhcp2.netBiosNodeType, NetBiosNodeType.equal),
+    Region.equal(dhcp1.region, dhcp2.region),
+  ])
+
+# Construct a default DhcpOptions value for a region.
+#
+# The default `DhcpOptions` will enable Amazon provided DNS and the
+# default AWS domain of "ec2.internal" for us-east-1 or
+# "region.compute.internal" for all other regions.
+#
+# @arg region The region to create the DhcpOptions for.
+#
+# @return A DhcpOptions value configured with default DNS settings
+# appropriate for `region`.
+fun defaultForRegion(region: AWS.Region) -> EC2.DhcpOptions:
+  let domainName: case region of
+                    | Region.Us-east-1 -> "ec2.internal"
+                    | _                -> Region.toString(region) ++ ".compute.internal"
+  new {
+    region: region,
+    domainNameServers: ["AmazonProvidedDNS"],
+    domainName: domainName,
+  }

@@ -1,0 +1,6 @@
+export
+  module SNS as .
+  module Topic as Topic
+
+import Fugue.AWS.SNS.Topic as Topic
+import Fugue.Core.AWS.SNS as SNS

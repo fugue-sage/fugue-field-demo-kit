@@ -1,0 +1,42 @@
+# This is the preferred interface for making Lambda S3BucketCode with Fugue.
+# If you want to manage a Lambda S3BucketCode with Fugue, the `new` function
+# is the right place to start.
+
+export
+  new
+
+import Fugue.AWS.Internal.Validation as V
+import Fugue.Core.AWS.Lambda as Lambda
+import Fugue.Core.AWS.S3 as S3
+
+# `new` Lambda S3BucketCode (Constructor)
+#
+# Call this constructor to create a new
+# Fugue.Core.AWS.Lambda.S3BucketCode value.
+#
+# @arg s3Key the Amazon S3 object (the deployment package) key name you want
+# to upload.
+#
+# @arg s3ObjectVersion the Amazon S3 object (the deployment package) version
+# you want to upload.
+#
+# @arg s3Bucket S3.Bucket name where the .zip file containing your deployment
+# package is stored. This bucket must reside in the same AWS region where you
+# are creating the Lambda function.
+#
+# @return a Fugue.Core.Aws.Lambda.S3BucketCode value.
+fun new {
+      s3Key: String,
+      s3ObjectVersion: String,
+      s3Bucket: S3.Bucket
+    } -> Lambda.S3BucketCode:
+  let valid: V.concat [
+    V.Success
+  ]
+  case valid of
+    | V.Success -> Lambda.S3BucketCode{
+      s3Key: s3Key,
+      s3ObjectVersion: s3ObjectVersion,
+      s3Bucket: s3Bucket
+      }
+    | V.Fail err -> error("Invalid S3BucketCode: " ++ err)

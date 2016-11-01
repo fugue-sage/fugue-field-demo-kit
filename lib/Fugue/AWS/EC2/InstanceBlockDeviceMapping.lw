@@ -1,0 +1,66 @@
+# This is the preferred interface for making Instance Block Device
+# mappings with Fugue. If you want to manage an an Instance Block
+# Device mapping with Fugue, the `new` function is the right place to
+# start.
+
+export
+  type Spec
+  default
+  new
+
+import Fugue.Core.AWS.EC2 as EC2
+
+# `new` Instance Block Device Mapping (Constructor)
+#
+# Call this constructor to create a new
+# Fugue.Core.AWS.EC2.InstanceBlockDeviceMapping value.
+#
+# @arg spec An Instance Block Device mapping specification record.
+# @return A Fugue.Core.AWS.EC2.InstanceBlockDeviceMapping value.
+fun new(spec: Spec) -> EC2.InstanceBlockDeviceMapping: EC2.InstanceBlockDeviceMapping(spec)
+
+# Instance Block Device Mapping (Resource)
+#
+# Either the `ebs` field or the `virtualName` field may be specified,
+# but not both. The former creates a mapping with an EBS block
+# device, while the latter creates a mapping with ephemeral
+# instance storage. You can also specify the `noDevice` value as
+# `True`, in which case the given device name is explictly
+# unmapped.
+#
+# Example usage:
+#
+#     EC2.InstanceBlockDeviceMapping.new {
+#       deviceName: "/dev/sdz",
+#       ebs: EC2.EbsInstanceBlockDevice.new {
+#         volume: EC2.Volume.new {
+#           size: 1,
+#           availabilityZone: AWS.A,
+#           tags: [mvc-instance-tag],
+#           volumeType: EC2.Standard,
+#           encrypted: False,
+#         },
+#         deleteOnTermination: True,
+#       }
+#     }
+#
+# @field deviceName The name of the device to present to the operating system. For example, `/dev/sda1`.
+#
+# @field ebs The EBS block device to map to this name. 
+#
+# @field virtualName The ephemeral storage to device to map to this name. 
+#
+# @field noDevice A special null device to map to this name. 
+type Spec:
+  deviceName: String
+  ebs: Optional<EC2.EbsInstanceBlockDevice>
+  virtualName: Optional<String>
+  noDevice: Optional<Bool>
+
+# Instance Block Device Mapping (Default Values)
+default: {
+  virtualName: None,
+  ebs: None,
+  noDevice: None,
+}
+

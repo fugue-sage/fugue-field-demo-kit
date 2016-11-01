@@ -1,0 +1,36 @@
+# This is the preferred interface for making S3 TargetGrants
+# with Fugue. If you want to manage an S3 TargetGrant with 
+# Fugue, the `new` function is the right place to start.
+
+export 
+  new
+
+import Fugue.AWS.Internal.Validation as V
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.S3 as S3
+
+# `new` S3 TargetGrant (Constructor)
+#
+# Call this constructor to create a new 
+# Fugue.Core.AWS.S3.TargetGrant value.
+#
+# @arg grantee a S3.Grantee value that defines the Grantee to be given 
+# permissions
+#
+# @arg permission a S3.Permission value that defines the permissions given to
+# the Grantee
+#
+# @return a Fugue.Core.AWS.S3.TargetGrant value.
+fun new{
+  grantee: S3.Grantee,
+  permission: S3.BucketLogsPermission
+} -> S3.TargetGrant:
+  let valid: V.concat[
+    V.Success
+  ]
+  case valid of
+    | V.Success -> S3.TargetGrant{
+        grantee: grantee,
+        permission: permission
+      }
+    | V.Fail err -> error("Invalid TargetGrant: " ++ err)

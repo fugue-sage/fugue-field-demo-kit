@@ -1,0 +1,39 @@
+export
+  equal
+  key
+  tag
+  value
+
+import Fugue.Core.AWS.Common as AWS
+
+# Create a tag.
+#
+# Example usage:
+#
+#     myTag: AWS.tag("foo", "bar")
+#
+# @arg name The name to give the tag.
+# @arg value The value to store in the tag.
+# @return The tag.
+fun tag(name: String, value: String) -> AWS.Tag:
+  AWS.Tag {key: name, value: value}
+
+# Return the key for a given Tag.
+#
+# @arg tag The Tag
+# @return The String contents of tag's `key` field.
+fun key(tag: AWS.Tag) -> String: case tag of | AWS.Tag t -> t.key
+
+# Return the value for a given Tag.
+#
+# @arg tag The Tag
+# @return The String contents of tag's `value` field.
+fun value(tag: AWS.Tag) -> String: case tag of | AWS.Tag t -> t.value
+
+# Compare two Tags for equality.
+#
+# @arg this A Tag.
+# @arg that The tag to compare to `this`.
+# @return True if all the key and value fields of both Tags are equal.
+fun equal(this: AWS.Tag, that: AWS.Tag) -> Bool:
+  String.equal(key(this), key(that)) && String.equal(value(this), value(that))

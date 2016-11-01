@@ -1,0 +1,39 @@
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.SNS    as SNS
+
+type BodyOrURL:
+  | Body String
+  | URL String
+
+type Capability:
+  | IAM
+
+type OnFailure:
+  | DoNothing
+  | Rollback
+  | Delete
+
+type Parameter:
+  | Parameter 
+      parameterKey: Optional<String>
+      parameterValue: Optional<String>
+      usePreviousValue: Optional<Bool>
+    
+
+type Stack:
+  | Stack 
+      stackName: String
+      description: Optional<String>
+      parameters: Optional<List<Parameter>>
+      disableRollback: Optional<Bool>
+      notificationARNs: Optional<List<SNS.Topic>>
+      timeoutInMinutes: Optional<Int>
+      capabilities: Optional<List<Capability>>
+      tags: Optional<List<AWS.Tag>>
+      onFailure: Optional<OnFailure>
+      stackPolicy: Optional<BodyOrURL>
+      region: AWS.Region
+      resourceTypes: Optional<List<String>>
+      template: BodyOrURL
+    
+

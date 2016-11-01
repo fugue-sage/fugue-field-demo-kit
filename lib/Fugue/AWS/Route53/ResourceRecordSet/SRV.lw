@@ -1,0 +1,71 @@
+export
+  type Value
+  new
+
+import Fugue.AWS.Route53.ResourceRecordSet.Base as ResourceRecordSet
+import Fugue.Core.AWS.Route53 as Route53
+import Ludwig.Int as Int
+
+# See https://en.wikipedia.org/wiki/SRV_record for more details on the
+# SRV record format.
+#
+# @field priority Priority of the host. Lower values result in higher
+# preference.
+#
+# @field weight Relative weight compared to other values with the same
+# priority. Higher values result in higher preference.
+#
+# @field port The port the service is listening on.
+#
+# @field target The fully qualified domain name of the host
+# providing the service.
+type Value:
+  priority: Int
+  weight: Int
+  port: Int
+  target: String
+
+# Create a new SRV ResourceRecordSet.
+#
+# Example usage:
+#
+#     import Fugue.AWS.Route53 as Route53
+#     
+#     zone: Route53.HostedZone.external("12345679ABCDEF")
+#     
+#     srv: Route53.ResourceRecordSet.SRV.new {
+#       name: "_foo._tcp.example.com",
+#       values: [
+#         {priority: 0, weight: 5, port: 3000, target: "foo1.example.com"},
+#         {priority: 0, weight: 5, port: 3000, target: "foo2.example.com"},
+#       ],
+#       ttl: 60,
+#       hostedZone: zone
+#     }
+#
+# @arg name The fully qualified domain name of the record set.
+#
+# @arg values The list of values to include in the record set.
+#
+# @arg ttl The time to live in seconds.
+#
+# @arg hostedZone The hosted zone to create the record in.
+fun new {
+      name: String,
+      values: List<Value>,
+      ttl: Int,
+      hostedZone: Route53.HostedZone
+    } -> Route53.ResourceRecordSet:
+  let toRR: fun(x): List.fold(String.concat, " ", [
+    Int.toString(x.priority),
+    Int.toString(x.weight),
+    Int.toString(x.port),
+    x.target
+  ])
+  ResourceRecordSet.new {
+    name: name,
+    recordType: Route53.SRV,
+    ttl: ttl,
+    hostedZone: hostedZone,
+    resourceRecords: List.map(toRR, values),
+  }

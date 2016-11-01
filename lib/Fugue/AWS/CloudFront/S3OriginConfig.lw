@@ -1,0 +1,32 @@
+# This is the preferred interface for making CloudFront S3OriginConfigs
+# with Fugue. If you want to manage an CloudFront S3OriginConfigs with Fugue, 
+# the `new` function is the right place to start.
+
+export
+  new
+
+import Fugue.AWS.Internal.Validation as V
+import Fugue.AWS.ResourceID as ResourceID
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.CloudFront as CF
+
+# `new` CloudFront S3OriginConfig (Constructor)
+
+# Call this constructor to create a new 
+# Fugue.Core.AWS.CloudFront.S3OriginConfig value.
+#
+# @arg originAccessIdentity a Cloufront.OriginAccessIdentity object that 
+# links to an external OriginAccessIdentity
+#
+# @return a Fugue.Core.AWS.CloudFront.S3OriginConfig value.
+fun new {
+        originAccessIdentity: CF.OriginAccessIdentity
+    } -> CF.S3OriginConfig:
+  let valid: V.concat [
+    V.Success
+  ]
+  case valid of 
+    | V.Success -> CF.S3OriginConfig {
+        originAccessIdentity: originAccessIdentity,
+      }
+    | V.Fail err -> error("Invalid S3OriginConfig: " ++ err)

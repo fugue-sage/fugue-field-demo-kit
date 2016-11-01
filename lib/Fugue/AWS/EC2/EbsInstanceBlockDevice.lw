@@ -1,0 +1,38 @@
+# This is the preferred interface for making EBS Instance Block Device
+# resources with Fugue. If you want to manage an EBS Instance Block
+# Device with Fugue, the `new` function is the right place to start.
+
+export
+  type Spec
+  default
+  new
+
+import Fugue.Core.AWS.EC2 as EC2
+
+# `new` EBS Instance Block Device (Constructor)
+#
+# Call this constructor to create a new
+# Fugue.Core.AWS.EC2.EbsInstanceBlockDevice value.
+#
+# @arg spec A EBS Instance Block Device specification record.
+# @return A
+# Fugue.Core.AWS.EC2.EbsInstanceBlockDevice value.
+fun new(spec: Spec) -> EC2.EbsInstanceBlockDevice: EC2.EbsInstanceBlockDevice(spec)
+
+# EBS Instance Block Device (Resource)
+#
+# @field volume An EBS volume to associate with this device.
+#
+# @field deleteOnTermination Whether to delete the volume on instance
+# termination.
+type Spec:
+  volume: EC2.Volume
+  deleteOnTermination: Optional<Bool>
+
+# TODO ^ This needs a code example.
+
+# EBS Instance Block Device (Default Values)
+default: {
+  deleteOnTermination: Optional(False)
+}
+

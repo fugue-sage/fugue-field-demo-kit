@@ -1,0 +1,6 @@
+export
+  module KMS as .
+  module Key as Key
+
+import Fugue.AWS.KMS.Key as Key
+import Fugue.Core.AWS.KMS as KMS

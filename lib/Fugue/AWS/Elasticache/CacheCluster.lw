@@ -1,0 +1,122 @@
+export
+  type Spec
+  external
+  new
+
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.AWS.Region as Region
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.Elasticache as Elasticache
+import Ludwig.External as External
+
+# CacheCluster Specification
+#
+# @field cacheNodeType The node type to use for the cluster.
+#
+# @field engine The cache engine to use for the cluster.
+#
+# @field numCacheNodes The number of cache nodes in the cluster. Must
+#                      be 1 for Redis. Must be between 1 and 20 for
+#                      Memcache.
+#
+# @field securityGroups The list of SecurityGroups to associate with
+#                       the cluster.
+#
+# @field name The CacheCluster identifier. Up to 20 lower case
+#             alphanumeric characters or hyphens. Must start with a
+#             letter. Cannot end with a hyphen or include two
+#             consecutive hyphens.
+#
+# @field port The cache port number.
+#
+# @field tags A list of Tags to attach to the cluster.
+#
+# @field cacheSubnetGroup The CacheSubnetGroup to deploy the cluster
+#                         in.
+type Spec:
+  cacheNodeType: Elasticache.CacheNodeType
+  engine: Elasticache.EngineType
+  numCacheNodes: Optional<Int>
+  securityGroups: List<EC2.SecurityGroup>
+  name: String
+  port: Optional<Int>
+  tags: Optional<List<AWS.Tag>>
+  cacheSubnetGroup: Elasticache.CacheSubnetGroup
+
+# CacheCluster constructor.
+#
+# Example usage:
+#
+#     import Fugue.AWS.EC2 as EC2
+#     import Fugue.AWS.Elasticache as Elasticache
+#     import Fugue.AWS.Pattern.Network as Network
+#     import Fugue.Core.AWS.Common as AWS 
+#     
+#     net: Network.new({
+#       name: "EXAMPLE",
+#       cidr: "10.42.0.0/16",
+#       region: AWS.Us-east-1,
+#       publicSubnets: [
+#         (AWS.B, "10.42.12.0/24"),
+#         (AWS.C, "10.42.13.0/24")
+#       ],
+#       privateSubnets: [
+#         (AWS.B, "10.42.22.0/24"),
+#         (AWS.C, "10.42.23.0/24")
+#       ]
+#     })
+#     
+#     subnetGroup: Elasticache.CacheSubnetGroup.new {
+#       name: "private",
+#       description: "private subnets",
+#       subnets: net.privateSubnets,
+#     }
+#     
+#     clusterSecurityGroup: EC2.SecurityGroup.new {
+#       description: "redis-example-cluster",
+#       ipPermissions: [
+#         # add rules here...
+#       ],
+#       ipPermissionsEgress: None,
+#       vpc: net.vpc,
+#       tags: None
+#     }
+#     
+#     cluster: Elasticache.CacheCluster.new {
+#       name: "example-cluster",
+#       cacheNodeType: Elasticache.Cache_t2_micro,
+#       engine: Elasticache.Redis,
+#       numCacheNodes: 1,
+#       securityGroups: [clusterSecurityGroup],
+#       port: None,
+#       tags: None,
+#       cacheSubnetGroup: subnetGroup,
+#     }
+#
+# @arg spec A CacheCluster specification.
+# @return A CacheCluster value.
+fun new(spec: Spec) -> Elasticache.CacheCluster:
+  Elasticache.CacheCluster {
+    cacheNodeType: spec.cacheNodeType,
+    engine: spec.engine,
+    numCacheNodes: spec.numCacheNodes,
+    securityGroups: spec.securityGroups,
+    clusterName: spec.name,
+    port: spec.port,
+    tags: spec.tags,
+    cacheSubnetGroup: spec.cacheSubnetGroup,
+  }
+
+# Create a reference to an externally managed CacheCluster.
+#
+# Example usage:
+#
+#     cluster: Elasticache.CacheCluster.external("MyCluster", AWS.Us-east-1)
+#
+# @arg name The name of the target CacheCluster.
+#
+# @arg region The region containing the target CacheCluster.
+#
+# @return A reference to the specified CacheCluster.
+fun external(name: String, region: Region.Region) -> Elasticache.CacheCluster:
+  External.external {value: name, namespace: Region.toString(region)}

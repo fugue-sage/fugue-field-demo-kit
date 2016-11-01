@@ -1,0 +1,175 @@
+# This is the preferred interface for creating Launch Configurations
+# with Fugue. The `new` function is the best place to start.
+
+export
+  default
+  new
+
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS.IAM as IAM
+import Fugue.AWS.Internal.Validation as V
+import Fugue.Core.AWS.AutoScaling as AutoScaling
+import Fugue.AWS.Internal.UserData as UserData
+import Ludwig.External as E
+
+# `new` AutoScaling Launch Configuration (Constructor)
+#
+# Call this constructor to create a new
+# Fugue.Core.AWS.AutoScaling.LaunchConfiguration value.
+#
+# Example:
+#
+#     AutoScaling.LaunchConfiguration.new(
+#       AutoScaling.LaunchConfiguration.default with {
+#         image: "ami-080ae968",
+#         securityGroups: [demo-app-web-sg],
+#         instanceType: EC2.T2_micro,
+#         associatePublicIpAddress: True,
+#         iamInstanceProfile: demo-app-instance-profile
+#     })
+#
+# @arg keyName The SSH key to install on the instance when launched.
+#
+# @arg securityGroups The security groups to apply to the instance. At
+# least one security group must be specified.
+#
+# @arg userData The "userdata" string to launch the instance with.
+#
+# @arg userDataBin The userdata, as bytes, to provide to
+# instances. Required for sending gzip or multipart encoded
+# userdata. Only one of `userData` or `userDataBin` may be specified.
+#
+# @arg instanceType The type of instance to launch.
+#
+# @arg blockDeviceMappings Block devices to launch the instance
+# with, including EBS volumes and instance store volumes.
+#
+# @arg instanceMonitoring
+#
+# @arg spotPrice Spot price to bid for the instance. Supplying this
+# value makes the instance a spot instance instead of on-demand or RI.
+#
+# @arg iamInstanceProfile An instance profile to apply to the instance.
+#
+# @arg ebsOptimized Indicates whether to launch the instance as EBS
+# optimized. Basically, an EBS optimized instance uses a dedicated
+# interface for EBS traffic. An instance without EBS optimization uses
+# the same interface for both network and EBS traffic.
+#
+# @arg associatePublicIpAddress Indicates whether to associate a
+# public IP address with the instance on launch.
+#
+# @arg placementTenancy A placement group in which to launch the instance, if desired.
+#
+# @arg image The Amazon Machine Image (AMI) on which to base the instance.
+#
+# @return A Fugue.Core.AWS.AutoScaling.LaunchConfiguration value.
+fun new {
+      keyName: Optional<String>,
+      securityGroups: List<EC2.SecurityGroup>,
+      userData: Optional<String>,
+      userDataBin: Optional<Bytes>,
+      instanceType: EC2.InstanceType,
+      blockDeviceMappings: Optional<List<EC2.InstanceBlockDeviceMapping>>,
+      instanceMonitoring: Optional<Bool>,
+      spotPrice: Optional<String>,
+      iamInstanceProfile: Optional<IAM.InstanceProfile>,
+      ebsOptimized: Optional<Bool>,
+      associatePublicIpAddress: Optional<Bool>,
+      placementTenancy: Optional<EC2.Tenancy>,
+      image: String
+    } -> AutoScaling.LaunchConfiguration:
+  let encodedUserData: UserData.getEncodedUserData(userData, userDataBin)
+  let valid: V.concat [
+    validateEbsOptimized(ebsOptimized, instanceType),
+    validateImage(image),
+    validateKeyName(keyName),
+    validatePlacementTenancy(Optional.unpack(EC2.DefaultTenancy, placementTenancy), instanceType),
+    validateSecurityGroups(securityGroups),
+    validateSpotPrice(spotPrice),
+    UserData.validateUserData(userData, userDataBin),
+    UserData.validateSize(encodedUserData),
+    validateVpcTenancy(securityGroups, instanceType),
+  ]
+  case valid of
+    | V.Success  -> AutoScaling.LaunchConfiguration {
+                      keyName: keyName,
+                      securityGroups: securityGroups,
+                      userData: encodedUserData,
+                      instanceType: instanceType,
+                      blockDeviceMappings: blockDeviceMappings,
+                      spotPrice: spotPrice,
+                      iamInstanceProfile: iamInstanceProfile,
+                      ebsOptimized: ebsOptimized,
+                      associatePublicIpAddress: associatePublicIpAddress,
+                      placementTenancy: placementTenancy,
+                      image: image,
+                    }
+    | V.Fail err -> error("Invalid LaunchConfiguration: " ++ err)
+
+# AutoScaling Launch Configuration Specification (Default Values)
+default: {
+  keyName: None,
+  userData: None,
+  blockDeviceMappings: None,
+  instanceMonitoring: Optional(True),
+  spotPrice: None,
+  iamInstanceProfile: None,
+  ebsOptimized: Optional(False),
+  associatePublicIpAddress: Optional(False),
+  placementTenancy: None
+}
+
+fun validateImage(image: String) -> V.Validation:
+  if ! (String.startsWith("ami-", image)) then
+    V.Fail("image must start with 'ami-'")
+  else
+    let validLen: V.strLenValidator {field: "image", min: 1, max: 255}
+    validLen(Optional(image))
+
+validateKeyName: V.strLenValidator {field: "keyName", min: 1, max: 255}
+validateSpotPrice: V.strLenValidator {field: "spotPrice", min: 1, max: 255}
+
+fun validateSecurityGroups(groups: List<EC2.SecurityGroup>) -> V.Validation:
+  if List.null(groups) then V.Fail("at least one SecurityGroup must be specified")
+  else V.Success
+
+fun validateEbsOptimized(ebsOptimized: Optional<Bool>, instanceType: EC2.InstanceType) -> V.Validation:
+  let enabled: Optional.unpack(False, ebsOptimized)
+  if enabled && !(EC2.InstanceType.supportsEbsOptimization(instanceType)) then
+    V.Fail("ebsOptimized is enabled, but the instanceType specified doesn't support it")
+  else V.Success
+
+fun validateVpcTenancy(securityGroups: List<EC2.SecurityGroup>, instanceType: EC2.InstanceType) -> V.Validation:
+  case List.head(securityGroups) of
+    | None        ->  V.Fail("At least one SecurityGroup must be specified")
+    | Optional sg -> validateVpcTenancyFromSG(sg, instanceType)
+
+fun validateVpcTenancyFromSG(sg: EC2.SecurityGroup, instanceType: EC2.InstanceType) -> V.Validation:
+  # We can't perform this validation if the security group or its vpc
+  # are specified as external resources, so we just pass them through
+  # and let the planners sort it out.
+  if E.isExternal(sg) then
+    V.Success
+  else
+    let vpc: sg.(EC2.SecurityGroup).vpc
+    if E.isExternal(vpc) then
+      V.Success
+    else
+      case vpc.(EC2.Vpc).instanceTenancy of
+        | None                        -> V.Success
+        | Optional EC2.DefaultTenancy -> V.Success
+        | _                           -> if EC2.InstanceType.supportsDedicatedInstances(instanceType) then
+                                           V.Success
+                                         else
+                                           let name: EC2.InstanceType.toString(instanceType)
+                                           V.Fail("InstanceType " ++ name ++ " does not support dedicated instances")
+
+fun validatePlacementTenancy(tenancy: EC2.Tenancy, instanceType: EC2.InstanceType) -> V.Validation:
+  case tenancy of
+    | EC2.DefaultTenancy -> V.Success
+    | _                  -> if EC2.InstanceType.supportsDedicatedInstances(instanceType) then
+                              V.Success
+                            else
+                              let name: EC2.InstanceType.toString(instanceType)
+                              V.Fail("InstanceType " ++ name ++ " does not support dedicated instances")

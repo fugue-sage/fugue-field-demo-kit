@@ -1,0 +1,56 @@
+# This is the preferred interface for making CloudFront Origin objects
+# with Fugue. If you want to manage CloudFront with Fugue, the
+# `new` function is the right place to start.
+
+export
+  new
+
+import Fugue.AWS.Internal.Validation as V
+import Fugue.AWS.ResourceID as ResourceID
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.CloudFront as CF
+
+# `new` CloudFront Origin (Constructor)
+
+# Call this constructor to create a new Fugue.Core.AWS.CloudFront.Origin 
+# value.
+#
+# @arg id A unique identifier for the origin. The value of Id must be unique 
+# within the distribution.
+#
+# @arg domainName Amazon S3 origins: The DNS name of the Amazon S3 bucket from 
+# which you want CloudFront to get objects for this origin, for example, 
+# myawsbucket.s3.amazonaws.com. Custom origins: The DNS domain name for the HTTP 
+# server from which you want CloudFront to get objects for this origin, for 
+# example, www.example.com.
+#
+# @arg originPath An optional element that causes CloudFront to request your 
+# content from a directory in your Amazon S3 bucket or your custom origin. A 
+# directory name starting with a "/". 
+#
+# @arg customHeaders A list of CloudFront.CustomHeader objects that contains 
+# information about the custom headers associated with this Origin.
+#
+# @arg originConfig a CloudFront.OriginConfig that contains information about 
+# the Amazon S3 origin.
+#
+# @return a Fugue.Core.AWS.CloudFront.Origin value
+fun new {
+        id: String,
+        domainName: String,
+        originPath: Optional<String>,
+        customHeaders: Optional<List<CF.CustomHeader>>,
+        originConfig: CF.OriginConfig
+    } -> CF.Origin:
+  let valid: V.concat [
+    V.Success
+  ]
+  case valid of
+    | V.Success -> CF.Origin {
+        id: id,
+        domainName: domainName,
+        originPath: originPath,
+        customHeaders: customHeaders,
+        originConfig: originConfig,
+      }
+    | V.Fail err -> error("Invalid Origin: " ++ err)

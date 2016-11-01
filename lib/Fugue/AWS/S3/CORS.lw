@@ -1,0 +1,4 @@
+export
+  module Rule as Rule
+
+import Fugue.AWS.S3.CORS.Rule as Rule

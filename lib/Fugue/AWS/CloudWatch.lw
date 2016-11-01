@@ -1,0 +1,10 @@
+export
+  module CloudWatch as .
+  module Action as Action
+  module Alarm as Alarm
+  module Namespace as Namespace
+
+import Fugue.AWS.CloudWatch.Action as Action
+import Fugue.AWS.CloudWatch.Alarm as Alarm
+import Fugue.AWS.CloudWatch.Namespace as Namespace
+import Fugue.Core.AWS.CloudWatch as CloudWatch

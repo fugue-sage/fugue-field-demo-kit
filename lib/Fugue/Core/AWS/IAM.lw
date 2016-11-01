@@ -1,0 +1,30 @@
+import Fugue.Core.AWS.Common as .
+
+type Policy:
+  | Policy 
+      policyName: String
+      policyDocument: String
+    
+
+type User:
+  | User 
+      userName: String
+      inlinePolicies: Optional<List<Policy>>
+    
+
+type Role:
+  | Role 
+      roleName: String
+      assumeRolePolicyDocument: String
+      rolePolicies: Optional<List<Policy>>
+    
+
+type InstanceProfile:
+  | InstanceProfile 
+      instanceProfileName: String
+      roles: List<Role>
+    
+
+type ServerCertificate:
+  | ServerCertificate NotImplemented
+

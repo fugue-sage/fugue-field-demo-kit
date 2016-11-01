@@ -1,0 +1,14 @@
+export
+  module RDS as .
+  module DBCluster as DBCluster
+  module DBInstance as DBInstance
+  module DBParameterGroup as DBParameterGroup
+  module DBSubnetGroup as DBSubnetGroup
+  module OptionGroup as OptioGroup
+
+import Fugue.AWS.RDS.DBCluster as DBCluster
+import Fugue.AWS.RDS.DBInstance as DBInstance
+import Fugue.AWS.RDS.DBParameterGroup as DBParameterGroup
+import Fugue.AWS.RDS.DBSubnetGroup as DBSubnetGroup
+import Fugue.AWS.RDS.OptionGroup as OptionGroup
+import Fugue.Core.AWS.RDS as RDS

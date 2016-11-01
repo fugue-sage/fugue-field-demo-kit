@@ -1,0 +1,4 @@
+export
+  module Bucket as Bucket
+
+import Fugue.HIPAA.AWS.S3.Bucket as Bucket

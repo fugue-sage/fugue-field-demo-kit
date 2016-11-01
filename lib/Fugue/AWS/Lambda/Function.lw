@@ -1,0 +1,106 @@
+# This is the preferred interface for making Lambda Function with Fugue.
+# If you want to manage a Lambda Function with Fugue, the `new` function
+# is the right place to start.
+
+export
+  new
+  external
+
+import Fugue.AWS.ARN as ARN
+import Fugue.AWS.Internal.Validation as V
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.IAM as IAM
+import Fugue.Core.AWS.Lambda as Lambda
+
+# `new` Lambda Function (Constructor)
+#
+# Call this constructor to create a new
+# Fugue.Core.AWS.Lambda.Function value.
+#
+# @arg functionName the name you want to assign to the function you are
+# uploading. The function names appear in the console and are returned in the
+# ListFunctions API. Function names are used to specify functions to other AWS
+# Lambda APIs, such as Invoke.
+#
+# @arg runtime the runtime environment for the Lambda Function you are
+# uploading.
+#
+# @arg handler the function within your code that Lambda calls to begin
+# execution. For Node.js, it is the module-name.export value in your function.
+# For Java, it can be package.class-name::handler or package.class-name.
+#
+# @arg description a short, user-defined function description. Lambda does
+# not use this value. Assign a meaningful description as you see fit.
+#
+# @arg timeout the function execution time at which Lambda should terminate
+# the function. Because the execution time has cost implications, we recommend
+# you set this value based on your expected execution time. The default is 3
+# seconds.
+#
+# @arg memorySize the amount of memory, in MB, your Lambda Function is given.
+# Lambda uses this memory size to infer the amount of CPU and memory allocated
+# to your function. Your function use-case determines your CPU and memory
+# requirements. For example, a database operation might need less memory
+# compared to an image processing function. The default value is 128 MB. The
+# value must be a multiple of 64 MB.
+#
+# @arg publish this boolean parameter can be used to request AWS Lambda to
+# create the Lambda Function and publish a version as an atomic operation.
+#
+# @arg vpcConfig if your Lambda Function accesses resources in a VPC, you
+# provide this parameter identifying the list of EC2.SecurityGroups and
+# EC2.Subnet. These must belong to the same EC2.VPC. You must provide at least
+# one security group and one subnet.
+#
+# @arg region the region to run the Lambda Function.
+#
+# @arg code the code for the Lambda Function.
+#
+# @arg role an IAM.Role that Lambda assumes when it executes your function to
+# access any other Amazon Web Services (AWS) resources.
+#
+# @return a Fugue.Core.AWS.Lambda.Function value.
+fun new {
+      functionName: String,
+      runtime: Lambda.Runtime,
+      handler: String,
+      description: Optional<String>,
+      timeout: Optional<Int>,
+      memorySize: Optional<Int>,
+      publish: Optional<Bool>,
+      vpcConfig: Optional<Lambda.VpcConfig>,
+      region: Optional<AWS.Region>,
+      code: Lambda.Code,
+      role: IAM.Role
+    } -> Lambda.Function:
+  let valid: V.concat [
+    V.Success
+  ]
+  case valid of
+    | V.Success -> Lambda.Function {
+      functionName: functionName,
+      runtime: runtime,
+      handler: handler,
+      description: description,
+      timeout: timeout,
+      memorySize: memorySize,
+      publish: publish,
+      vpcConfig: vpcConfig,
+      region: region,
+      code: code,
+      role: role
+      }
+    | V.Fail err -> error ("Invalid Function: " ++ err)
+
+# Create a reference to an externally managed Function.
+#
+# Example usage:
+#
+#     topic: Lambda.Function.external("arn:aws:lambda:us-east-1:123456789012:example-function")
+#
+# @arg arn The ARN of an existing function.
+#
+# @return A reference to the specified Function.
+Lambda.Function external(String arn):
+  if String.equal(ARN.service(arn), "lambda") then ARN.external(arn)
+  else error("Invalid Lambda arn: '" ++ arn ++ "'")

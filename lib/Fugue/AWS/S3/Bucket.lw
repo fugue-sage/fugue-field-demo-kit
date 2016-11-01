@@ -1,0 +1,141 @@
+export
+  module Policy as Policy
+  external
+  new
+
+import Fugue.AWS.S3.CORS as CORS
+import Fugue.AWS.Internal.Validation as V
+import Fugue.AWS.Region as Region
+import Fugue.AWS.S3.Bucket.Policy as Policy
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.S3 as S3
+import Ludwig.External as E
+
+# `new` S3 Bucket (Constructor)
+#
+# This function is used to declare S3 buckets in Ludwig. Details on
+# usage of the function are below.
+#
+# S3 buckets in Fugue are well-supported, but there are two notes you
+# should understand:
+#
+# - First, know that Fugue will not delete a bucket that is not
+# empty. Furthermore, Fugue does not manage *objects* in buckets, so
+# emptying the bucket is something you must use other tools for. This
+# is easily accomplished with the AWS CLI using the `rm` command
+# (http://docs.aws.amazon.com/cli/latest/reference/s3/rm.html).
+#
+# - Second, know that Fugue is constantly monitoring your
+# infrastructure configuration, and therefore is continuously running
+# describe calls against the Amazon API. If you enable S3 bucket
+# logging on a Fugue-managed bucket, you will see evidence of these
+# describe calls in your logs. This happens even when the process
+# defining the bucket is suspended. An example of this message is
+# shown below, but it is expected and harmless.
+#
+# ```
+# 8650ecd37b258d45fe5d626f453ba1635a39564e2be3e2e33074079526359bdf username-example-bucket5 [22/Sep/2016:20:52:24 +0000] 127.0.0.1 arn:aws:sts::1234567890:assumed-role/fugue-FugueIam-10NJSEIQWRE2D/i-0b5f0bc18af370451 8EC7F75AB4967B17 REST.GET.BUCKETPOLICY - "GET /?policy HTTP/1.1" 200 - 165 - 6 - "-" "Botocore/1.4.51 Python/3.4.2 Linux/3.16.0-4-amd64" -
+# 8650ecd37b258d45fe5d626f453ba1635a39564e2be3e2e33074079526359bdf username-example-bucket5 [22/Sep/2016:20:52:24 +0000] 127.0.0.1 arn:aws:sts::1234567890:assumed-role/fugue-FugueIam-10NJSEIQWRE2D/i-0b5f0bc18af370451 D621938E1BA58D64 REST.GET.CORS - "GET /?cors HTTP/1.1" 404 NoSuchCORSConfiguration 326 - 14 - "-" "Botocore/1.4.51 Python/3.4.2 Linux/3.16.0-4-amd64" -
+# 8650ecd37b258d45fe5d626f453ba1635a39564e2be3e2e33074079526359bdf username-example-bucket5 [22/Sep/2016:20:52:25 +0000] 127.0.0.1 arn:aws:sts::1234567890:assumed-role/fugue-FugueIam-10NJSEIQWRE2D/i-0b5f0bc18af370451 3374EE958AD95AE4 REST.GET.LOGGING_STATUS - "GET /?logging HTTP/1.1" 200 - 530 - 116 - "-" "Botocore/1.4.51 Python/3.4.2 Linux/3.16.0-4-amd64" -
+# 8650ecd37b258d45fe5d626f453ba1635a39564e2be3e2e33074079526359bdf username-example-bucket5 [22/Sep/2016:20:52:25 +0000] 127.0.0.1 arn:aws:sts::1234567890:assumed-role/fugue-FugueIam-10NJSEIQWRE2D/i-0b5f0bc18af370451 9E6158A656CB6B1C REST.GET.TAGGING - "GET /?tagging HTTP/1.1" 200 - 330 - 51 48 "-" "Botocore/1.4.51 Python/3.4.2 Linux/3.16.0-4-amd64" -
+# 8650ecd37b258d45fe5d626f453ba1635a39564e2be3e2e33074079526359bdf username-example-bucket5 [22/Sep/2016:20:52:25 +0000] 127.0.0.1 arn:aws:sts::1234567890:assumed-role/fugue-FugueIam-10NJSEIQWRE2D/i-0b5f0bc18af370451 E15FCD02E435F356 REST.GET.WEBSITE - "GET /?website HTTP/1.1" 200 - 242 - 12 9 "-" "Botocore/1.4.51 Python/3.4.2 Linux/3.16.0-4-amd64" -
+# ```
+#
+# **Example function usage:**
+#
+#     import Fugue.AWS as AWS
+#     import Fugue.AWS.S3 as S3
+#     
+#     bucket: S3.Bucket.new {
+#       name: "example-bucket",
+#       region: AWS.Us-east-1,
+#     }
+#
+# @arg name The name of the bucket. Must be unique across all of
+# AWS. Must be between 3 and 63 characters in length. May contain
+# lower case letters, numbers, hyphens and periods (`.`). A bucket
+# name may not start or end with a period and there must be at least
+# one other character between periods.
+#
+# @arg region The region in which the bucket is created.
+#
+# @arg tags A list of AWS tags to apply to the bucket.
+#
+# @arg acl The canned ACL to attach. See
+# http://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl
+# for more information on canned ACLs.
+#
+# @arg policy The bucket policy to attach. See
+# `Fugue.AWS.S3.Bucket.Policy` for functions to help generate common
+# policies.
+#
+# @arg corsConfiguration A list of CORS rules to apply to the
+# bucket. Rules can be created via `Fugue.AWS.S3.CORS.Rule.new`. See
+# http://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html for more
+# information on CORS and S3.
+#
+# @arg websiteConfiguration TODO
+#
+# @return A Bucket value.
+fun new {
+      name: String,
+      region: Region.Region,
+      tags: Optional<List<AWS.Tag>>,
+      acl: Optional<S3.BucketCannedACL>,
+      policy: Optional<String>,
+      corsConfiguration: Optional<List<S3.CORSRule>>,
+      websiteConfiguration: Optional<S3.WebsiteConfiguration>,
+      loggingConfiguration: Optional<S3.LoggingConfiguration>,
+      notificationConfiguration: Optional<List<S3.TargetConfiguration>>
+    } -> S3.Bucket:
+  let valid: V.concat [
+    validateNameDots(name),
+    validateNameLength(name),
+  ]
+  case valid of
+    | V.Fail err -> error("Invalid Bucket: " ++ err)
+    | V.Success  -> let toCORSConfig: fun(rules): S3.CORSConfiguration {corsRules: rules}
+                    let toNotificationConfig: fun(targets): S3.NotificationConfiguration{configurations: targets}
+                    S3.Bucket {
+                      name: name,
+                      region: region,
+                      tags: tags,
+                      acl: acl,
+                      policy: policy,
+                      corsConfiguration: Optional.map(toCORSConfig, corsConfiguration),
+                      websiteConfiguration: websiteConfiguration,
+                      loggingConfiguration: loggingConfiguration,
+                      notificationConfiguration: Optional.map(toNotificationConfig, notificationConfiguration)
+                    }
+
+fun validateNameLength(name: String) -> V.Validation:
+  let len: String.length(name)
+  if len >= 3 && len <= 63 then V.Success
+  else V.Fail("name must be between 3 and 63 characters in length")
+
+fun validateNameDots(name: String) -> V.Validation:
+  let consecutiveDots: fun(str):
+    if String.null(str) then False
+    elif String.equal(String.take(2, str), "..") then True
+    else consecutiveDots(String.drop(1, str))
+
+  if String.equal(String.take(1, name), ".") then
+    V.Fail("name must not start with a '.'")
+  elif String.equal(String.drop(String.length(name) -1, name), ".") then
+    V.Fail("name must not end with a '.'")
+  elif consecutiveDots(name) then
+    V.Fail("name must not have consecutive '.' characters")
+  else
+    V.Success
+
+# Create a reference to an externally managed Bucket.
+#
+# Example usage:
+#
+#     instance: S3.Bucket.external("example-bucket", AWS.Us-east-1)
+#
+# @arg name The name of the target bucket.
+# @arg region The Region containing the target bucket.
+# @return A reference to the specified bucket.
+fun external(name: String, region: Region.Region) -> S3.Bucket:
+  E.external {value: name, namespace: Region.toString(region)}

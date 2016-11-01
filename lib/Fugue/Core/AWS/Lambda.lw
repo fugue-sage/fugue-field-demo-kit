@@ -1,0 +1,43 @@
+import Fugue.Core.AWS.Common as AWS
+import Fugue.Core.AWS.EC2 as EC2
+import Fugue.Core.AWS.IAM as IAM
+import Fugue.Core.AWS.S3 as S3
+
+type Function:
+  | Function 
+      functionName: String
+      runtime: Runtime
+      handler: String
+      description: Optional<String>
+      timeout: Optional<Int>
+      memorySize: Optional<Int>
+      publish: Optional<Bool>
+      vpcConfig: Optional<VpcConfig>
+      region: Optional<AWS.Region>
+      code: Code
+      role: IAM.Role
+    
+
+type Code:
+  | CodeZipFile Bytes
+  | CodeS3Bucket S3BucketCode
+
+type S3BucketCode:
+  | S3BucketCode 
+      s3Key: String
+      s3ObjectVersion: String
+      s3Bucket: S3.Bucket
+    
+
+type Runtime:
+  | Nodejs
+  | Nodejs4_3
+  | Java8
+  | Python2_7
+
+type VpcConfig:
+  | VpcConfig 
+      subnets: List<EC2.Subnet>
+      securityGroups: List<EC2.SecurityGroup>
+    
+
