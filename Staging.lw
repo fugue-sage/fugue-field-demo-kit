@@ -47,6 +47,6 @@ internetCIDR: EC2.IpRanges([EC2.IpRange(cidrIp: "0.0.0.0/0")])
 
 # Tags
 web-app-tag: AWS.Tag({
-  key: 'Application',
-  value: 'VPC'
+  key: 'Environment',
+  value: 'Staging'
 })

@@ -2,12 +2,12 @@ composition
 
 import Fugue.AWS.EC2 as EC2
 import Fugue.AWS.Pattern.Network as Network
-import Fugue.Core.AWS.Common as AWS
+#import Fugue.Core.AWS.Common as AWS
+import Fugue.AWS as AWS
 
 devTeam: [
   "lisa",
-  "hector",
-  "sam"
+  "hector"
 ]
 
 type UserEnvironment:
@@ -35,7 +35,7 @@ fun userEnvironment(username: String) -> UserEnvironment:
         EC2.IpPermission.http(EC2.IpPermission.Target.all),
         EC2.IpPermission.https(EC2.IpPermission.Target.all),
       ],
-      tags: [web-app-tag],
+      tags: [AWS.tag("Name", username ++ "-public")],
       vpc: network.vpc
     },
   }
@@ -43,9 +43,3 @@ fun userEnvironment(username: String) -> UserEnvironment:
 # Convenience
 internetCIDR: EC2.IpRanges([EC2.IpRange(cidrIp: "0.0.0.0/0")])
 
-
-# Tags
-web-app-tag: AWS.Tag({
-  key: 'Name',
-  value: 'Dev-VPC'
-})
