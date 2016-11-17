@@ -4,49 +4,48 @@ import Fugue.AWS.EC2 as EC2
 import Fugue.AWS.Pattern.Network as Network
 import Fugue.Core.AWS.Common as AWS
 
+devTeam: [
+  "lisa",
+  "hector",
+  "sam"
+]
 
-# Network (VPC)
-example-network: Network.new {
-  name: "example-network", 
-  region: AWS.Us-west-2,
-  cidr: "10.0.0.0/16",
-  publicSubnets: [
-    (AWS.A, "10.0.1.0/24"),
-    (AWS.B, "10.0.2.0/24"),
-  ],
-  privateSubnets: [],
-}
+type UserEnvironment:
+  username: String
+  network: Network.Network
+  publicSG: EC2.SecurityGroup
 
-# Web-facing SecurityGroup
-web-facing-sg: EC2.SecurityGroup({
-  description: "Allow http/s traffic from the Internet",
-  ipPermissions: [elbHTTPS, elbHTTP],
-  ipPermissionsEgress: None,
-  tags: [web-app-tag],
-  vpc: example-network.vpc
-})
-
-elbHTTP: EC2.IpPermission({
-  ipProtocol: "tcp",
-  fromPort: 80,
-  toPort: 80,
-  prefixLists: None,
-  target: internetCIDR
-})
-
-elbHTTPS: EC2.IpPermission({
-  ipProtocol: "tcp",
-  fromPort: 443,
-  toPort: 443,
-  prefixLists: None,
-  target: internetCIDR
-})
+fun userEnvironment(username: String) -> UserEnvironment:
+  let network: Network.new {
+    name: "dev-network-" ++ username,
+    region: AWS.Us-west-2,
+    cidr: "10.0.0.0/16",
+    publicSubnets: [
+      (AWS.A, "10.0.1.0/24"),
+      (AWS.B, "10.0.2.0/24"),
+    ],
+    privateSubnets: [],
+  }
+  {
+    username: username,
+    network: network,
+    publicSG: EC2.SecurityGroup.new {
+      description: "Allow http/s traffic from the Internet",
+      ipPermissions: [
+        EC2.IpPermission.http(EC2.IpPermission.Target.all),
+        EC2.IpPermission.https(EC2.IpPermission.Target.all),
+      ],
+      tags: [web-app-tag],
+      vpc: network.vpc
+    },
+  }
 
 # Convenience
 internetCIDR: EC2.IpRanges([EC2.IpRange(cidrIp: "0.0.0.0/0")])
 
+
 # Tags
 web-app-tag: AWS.Tag({
-  key: 'Application',
-  value: 'VPC'
+  key: 'Name',
+  value: 'Dev-VPC'
 })
