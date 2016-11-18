@@ -1,0 +1,58 @@
+composition
+
+import Fugue.AWS as AWS
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS.Pattern.Network as Network
+
+devTeam: [
+  "lisa",
+  "hector",
+  "sam"
+]
+
+environments: List.map(userEnvironment, devTeam)
+
+type UserEnvironment:
+  username: String
+  network: Network.Network
+  publicSG: EC2.SecurityGroup
+
+fun userEnvironment(username: String) -> UserEnvironment:
+  let network: Network.new {
+    name: "dev-network-" ++ username,
+    region: AWS.Us-west-2,
+    cidr: "10.0.0.0/16",
+    publicSubnets: [
+      (AWS.A, "10.0.1.0/24"),
+      (AWS.B, "10.0.2.0/24"),
+    ],
+    privateSubnets: [],
+  }
+  {
+    username: username,
+    network: network,
+    publicSG: EC2.SecurityGroup.new {
+      description: "Allow http/s traffic from the Internet",
+      ipPermissions: [elbHTTP, elbHTTPS],
+      tags: [AWS.tag("Name", username ++ "-public")],
+      vpc: network.vpc
+    },
+  } 
+
+elbHTTP: EC2.IpPermission({
+  ipProtocol: "tcp",
+  fromPort: 80,
+  toPort: 80,
+  prefixLists: None,
+  target: internetCIDR
+})
+
+elbHTTPS: EC2.IpPermission({
+  ipProtocol: "tcp",
+  fromPort: 443,
+  toPort: 443,
+  prefixLists: None,
+  target: internetCIDR
+})
+
+internetCIDR: EC2.IpRanges([EC2.IpRange(cidrIp: "0.0.0.0/0")])
