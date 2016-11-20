@@ -1,0 +1,8 @@
+composition
+
+import Fugue.AWS.Pattern.Network as Network
+import DataFile as Data
+
+demo-app-network: Network.new(Data.defaults.vpc with {
+      privateSubnets: []
+})

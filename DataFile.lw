@@ -1,0 +1,18 @@
+
+import Fugue.Core.AWS.Common as AWS
+
+AWS.Region demo-region: AWS.Us-west-2
+appName: "demo-app"
+
+defaults: {
+      vpc: {
+            name: "dev-network",
+            region: demo-region,
+            cidr: "10.0.0.0/16",
+            publicSubnets: [
+                  (AWS.A, "10.0.1.0/24"),
+                  (AWS.B, "10.0.2.0/24")
+            ]
+      }
+
+}
