@@ -20,13 +20,13 @@ dev-network: Network.new {
 # Web-facing SecurityGroup
 dev-hector-sg: EC2.SecurityGroup({
   description: "Allow http/s traffic from the Internet",
-  ipPermissions: [elbHTTPS, elbHTTP],
+  ipPermissions: [webHTTPS, webHTTP],
   ipPermissionsEgress: None,
   tags: [web-app-tag],
   vpc: dev-network.vpc
 })
 
-elbHTTP: EC2.IpPermission({
+webHTTP: EC2.IpPermission({
   ipProtocol: "tcp",
   fromPort: 80,
   toPort: 80,
@@ -34,7 +34,7 @@ elbHTTP: EC2.IpPermission({
   target: internetCIDR
 })
 
-elbHTTPS: EC2.IpPermission({
+webHTTPS: EC2.IpPermission({
   ipProtocol: "tcp",
   fromPort: 443,
   toPort: 443,
