@@ -1,13 +1,13 @@
 composition
 
 import Fugue.AWS.EC2 as EC2
-import Fugue.AWS.Pattern.Network as Network
 import Fugue.Core.AWS.Common as AWS
+import Fugue.AWS.Pattern.Network as Network
 
 
 # Network (VPC)
-staging-network: Network.new {
-  name: "staging-network", 
+dev-network: Network.new {
+  name: "testing-network", 
   region: AWS.Us-west-2,
   cidr: "10.0.0.0/16",
   publicSubnets: [
@@ -18,15 +18,15 @@ staging-network: Network.new {
 }
 
 # Web-facing SecurityGroup
-staging-sg: EC2.SecurityGroup({
+testing-sg: EC2.SecurityGroup({
   description: "Allow http/s traffic from the Internet",
-  ipPermissions: [elbHTTPS, elbHTTP],
+  ipPermissions: [webHTTPS, webHTTP],
   ipPermissionsEgress: None,
   tags: [web-app-tag],
-  vpc: staging-network.vpc
+  vpc: dev-network.vpc
 })
 
-elbHTTP: EC2.IpPermission({
+webHTTP: EC2.IpPermission({
   ipProtocol: "tcp",
   fromPort: 80,
   toPort: 80,
@@ -34,7 +34,7 @@ elbHTTP: EC2.IpPermission({
   target: internetCIDR
 })
 
-elbHTTPS: EC2.IpPermission({
+webHTTPS: EC2.IpPermission({
   ipProtocol: "tcp",
   fromPort: 443,
   toPort: 443,
@@ -42,11 +42,12 @@ elbHTTPS: EC2.IpPermission({
   target: internetCIDR
 })
 
+
 # Convenience
 internetCIDR: EC2.IpRanges([EC2.IpRange(cidrIp: "0.0.0.0/0")])
 
 # Tags
 web-app-tag: AWS.Tag({
   key: 'Environment',
-  value: 'Staging'
+  value: 'testing'
 })

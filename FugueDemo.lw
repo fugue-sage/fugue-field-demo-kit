@@ -22,7 +22,7 @@ demo-app-tag: AWS.tag('Application', 'Fugue Demo App')
 # Network (VPC)
 #########################
 demo-app-network: Network.new {
-  name: "demo-app-network",
+  name: "prod-network",
   region: demo-app-region,
   cidr: "10.0.0.0/16",
   publicSubnets: [
