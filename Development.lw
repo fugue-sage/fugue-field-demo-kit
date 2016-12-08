@@ -18,7 +18,7 @@ dev-network: Network.new {
 }
 
 # Web-facing SecurityGroup
-web-facing-sg: EC2.SecurityGroup({
+dev-sg: EC2.SecurityGroup({
   description: "Allow http/s traffic from the Internet",
   ipPermissions: [webHTTPS, webHTTP],
   ipPermissionsEgress: None,

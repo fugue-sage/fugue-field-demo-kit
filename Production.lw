@@ -1,0 +1,141 @@
+composition
+
+import Fugue.AWS as AWS
+import Fugue.AWS.AutoScaling as AutoScaling
+import Fugue.AWS.DynamoDB as DynamoDB
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS.ELB as ELB
+import Fugue.AWS.IAM as IAM
+import Fugue.AWS.Pattern.Network as Network
+
+
+# Region
+prod-app-region: AWS.Us-west-2
+
+
+# Tags
+prod-app-tag: AWS.tag('Application', 'Fugue Demo App')
+
+
+# Network (VPC)
+prod-app-network: Network.new {
+  name: "prod-network",
+  region: prod-app-region,
+  cidr: "10.0.0.0/16",
+  publicSubnets: [
+    (AWS.A, "10.0.1.0/24"),
+    (AWS.B, "10.0.2.0/24"),
+  ],
+  privateSubnets: [],
+}
+
+
+# # DYNAMODB TABLE
+# prod-app-table: DynamoDB.Table.new {
+#   name: "prod-app-table",
+#   attributes: {"PropertyName": DynamoDB.S},
+#   schema: {"PropertyName": DynamoDB.HASH},
+#   provisionedThroughput: {
+#     read: 10,
+#     write: 10,
+#   },
+#   region: prod-app-region,
+# }
+
+
+# AUTOSCALING GROUP
+prod-app-asg: AutoScaling.AutoScalingGroup.new {
+  subnets: prod-app-network.publicSubnets,
+  loadBalancers: [prod-app-elb],
+  minSize: 4,
+  maxSize: 4,
+  defaultCooldown: 300,
+  healthCheckType: AutoScaling.Ec2,
+  launchConfiguration: prod-app-lc,
+  tags: [prod-app-tag],
+  terminationPolicies: [AutoScaling.ClosestToNextInstanceHour],
+  enabledMetrics: [
+    AutoScaling.GroupInServiceInstances,
+    AutoScaling.GroupTotalInstances
+  ]
+}
+
+
+### ASG LAUNCH CONFIG
+prod-app-lc: AutoScaling.LaunchConfiguration.new {
+  image: "ami-b7b366d7",
+  securityGroups: [prod-app-web-sg],
+  instanceType: EC2.T2_micro,
+  associatePublicIpAddress: True,
+  iamInstanceProfile: prod-app-instance-profile
+}
+
+
+### IAM Role
+prod-app-role: IAM.Role.new {
+  roleName: 'prod-app-role',
+  assumeRolePolicyDocument: IAM.Policy.AssumeRole.ec2,
+  rolePolicies: [prod-app-role-policy]
+}
+
+prod-app-instance-profile: IAM.InstanceProfile.new {
+  instanceProfileName: 'prod-app-instance-profile',
+  roles: [prod-app-role]
+}
+
+prod-app-role-policy: IAM.Policy.new {
+  policyName: 'ddb-full',
+  policyDocument: ddb-policy-document
+}
+
+
+# LOAD BALANCER
+prod-app-elb: ELB.LoadBalancer.new {
+  loadBalancerName: "prod-app-elb",
+  subnets: prod-app-network.publicSubnets,
+  healthCheck: ELB.HealthCheck.tcp {
+    port: 3000,
+    interval: 15,
+    timeout: 3,
+    unhealthyThreshold: 3,
+    healthyThreshold: 3
+  },
+  securityGroups: [prod-app-elb-sg],
+  listeners: [prod-app-listener],
+  tags: [prod-app-tag],
+}
+
+
+### LISTENER
+prod-app-listener: ELB.Listener.new {
+  protocol: ELB.HTTP,
+  loadBalancerPort: 80,
+  instancePort: 3000
+}
+
+
+# ELB SG
+prod-app-elb-sg: EC2.SecurityGroup.new {
+  description: "Allow http/s traffic from the Internet",
+  ipPermissions: [
+    EC2.IpPermission.http(EC2.IpPermission.Target.all),
+    EC2.IpPermission.https(EC2.IpPermission.Target.all),
+  ],
+  tags: [prod-app-tag],
+  vpc: prod-app-network.vpc
+}
+
+
+# WEB SG
+prod-app-web-sg: EC2.SecurityGroup.new {
+  description: "Allow http traffic from the ELB SG",
+  ipPermissions: [
+    EC2.IpPermission.tcp(3000, EC2.IpPermission.Target.securityGroup(prod-app-elb-sg)),
+  ],
+  tags: [prod-app-tag],
+  vpc: prod-app-network.vpc
+}
+
+
+# CONVENIENCE / CLARITY
+ddb-policy-document: '{"Version": "2012-10-17", "Statement": [ { "Action": [ "dynamodb:*" ], "Effect": "Allow", "Resource": "*" }]}'
