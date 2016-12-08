@@ -44,7 +44,7 @@ webHTTPS: EC2.IpPermission({
 
 ssh: EC2.IpPermission({
   ipProtocol: "tcp",
-  fromPort: 22,
+  fromPort:22,
   toPort: 22,
   prefixLists: None,
   target: internetCIDR
