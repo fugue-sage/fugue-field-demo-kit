@@ -8,19 +8,16 @@ import Fugue.AWS.ELB as ELB
 import Fugue.AWS.IAM as IAM
 import Fugue.AWS.Pattern.Network as Network
 
-#########################
+
 # Region
-#########################
 demo-app-region: AWS.Us-west-2
 
-#########################
+
 # Tags
-#########################
 demo-app-tag: AWS.tag('Application', 'Fugue Demo App')
 
-#########################
+
 # Network (VPC)
-#########################
 demo-app-network: Network.new {
   name: "prod-network",
   region: demo-app-region,
@@ -32,23 +29,21 @@ demo-app-network: Network.new {
   privateSubnets: [],
 }
 
-#########################
-# DYNAMODB TABLE
-#########################
-demo-app-table: DynamoDB.Table.new {
-  name: "demo-app-table",
-  attributes: {"PropertyName": DynamoDB.S},
-  schema: {"PropertyName": DynamoDB.HASH},
-  provisionedThroughput: {
-    read: 10,
-    write: 10,
-  },
-  region: demo-app-region,
-}
 
-#########################
+# # DYNAMODB TABLE
+# demo-app-table: DynamoDB.Table.new {
+#   name: "demo-app-table",
+#   attributes: {"PropertyName": DynamoDB.S},
+#   schema: {"PropertyName": DynamoDB.HASH},
+#   provisionedThroughput: {
+#     read: 10,
+#     write: 10,
+#   },
+#   region: demo-app-region,
+# }
+
+
 # AUTOSCALING GROUP
-#########################
 demo-app-asg: AutoScaling.AutoScalingGroup.new {
   subnets: demo-app-network.publicSubnets,
   loadBalancers: [demo-app-elb],
@@ -65,9 +60,8 @@ demo-app-asg: AutoScaling.AutoScalingGroup.new {
   ]
 }
 
-#########################
+
 ### ASG LAUNCH CONFIG
-#########################
 demo-app-lc: AutoScaling.LaunchConfiguration.new {
   image: "ami-b7b366d7",
   securityGroups: [demo-app-web-sg],
@@ -76,9 +70,8 @@ demo-app-lc: AutoScaling.LaunchConfiguration.new {
   iamInstanceProfile: demo-app-instance-profile
 }
 
-#########################
+
 ### IAM Role
-#########################
 demo-app-role: IAM.Role.new {
   roleName: 'demo-app-role',
   assumeRolePolicyDocument: IAM.Policy.AssumeRole.ec2,
@@ -95,9 +88,8 @@ demo-app-role-policy: IAM.Policy.new {
   policyDocument: ddb-policy-document
 }
 
-#########################
+
 # LOAD BALANCER
-#########################
 demo-app-elb: ELB.LoadBalancer.new {
   loadBalancerName: "demo-app-elb",
   subnets: demo-app-network.publicSubnets,
@@ -113,18 +105,16 @@ demo-app-elb: ELB.LoadBalancer.new {
   tags: [demo-app-tag],
 }
 
-#########################
+
 ### LISTENER
-#########################
 demo-app-listener: ELB.Listener.new {
   protocol: ELB.HTTP,
   loadBalancerPort: 80,
   instancePort: 3000
 }
 
-#########################
+
 # ELB SG
-#########################
 demo-app-elb-sg: EC2.SecurityGroup.new {
   description: "Allow http/s traffic from the Internet",
   ipPermissions: [
@@ -135,9 +125,8 @@ demo-app-elb-sg: EC2.SecurityGroup.new {
   vpc: demo-app-network.vpc
 }
 
-#########################
+
 # WEB SG
-#########################
 demo-app-web-sg: EC2.SecurityGroup.new {
   description: "Allow http traffic from the ELB SG",
   ipPermissions: [
@@ -147,7 +136,6 @@ demo-app-web-sg: EC2.SecurityGroup.new {
   vpc: demo-app-network.vpc
 }
 
-#########################
+
 # CONVENIENCE / CLARITY
-#########################
 ddb-policy-document: '{"Version": "2012-10-17", "Statement": [ { "Action": [ "dynamodb:*" ], "Effect": "Allow", "Resource": "*" }]}'
