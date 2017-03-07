@@ -20,4 +20,4 @@ There are Staging and Development compositions that only stand up VPCs with thos
 
 ### HIPAA Validations
 
-For the HIPAA validations to work properly, they need to be in the compiler's search path. Probably the easiest thing to do here is simply copy the hipaa/Fugue/HIPAA directory to /opt/Fugue/HIPAA on your local machine. If you do this, you can use the examples in the top-level directory directly.
+The HIPAA validations have been moved to the top-level directory so they can be more easy run. 
