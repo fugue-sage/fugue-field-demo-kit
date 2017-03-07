@@ -33,6 +33,7 @@ fun new {
     vpc: network.vpc
   }
   let asg: AutoScaling.AutoScalingGroup.new {
+    loadBalancers: [elb],
     subnets: network.publicSubnets,
     minSize: 4,
     maxSize: 4,
