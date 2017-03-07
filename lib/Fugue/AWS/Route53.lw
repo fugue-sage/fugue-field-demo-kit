@@ -1,8 +1,0 @@
-export
-  module Route53 as .
-  module HostedZone as HostedZone
-  module ResourceRecordSet as ResourceRecordSet
-
-import Fugue.AWS.Route53.HostedZone as HostedZone
-import Fugue.AWS.Route53.ResourceRecordSet as ResourceRecordSet
-import Fugue.Core.AWS.Route53 as Route53

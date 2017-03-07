@@ -1,8 +1,0 @@
-export
-  module AutoScaling as .
-  module AutoScalingGroup as AutoScalingGroup
-  module LaunchConfiguration as LaunchConfiguration
-
-import Fugue.AWS.AutoScaling.AutoScalingGroup as AutoScalingGroup
-import Fugue.AWS.AutoScaling.LaunchConfiguration as LaunchConfiguration
-import Fugue.Core.AWS.AutoScaling as AutoScaling

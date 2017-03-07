@@ -1,6 +1,0 @@
-# Utilities for generating bucket policies.
-
-export
-  module SSE as SSE
-
-import Fugue.AWS.S3.Bucket.Policy.SSE as SSE

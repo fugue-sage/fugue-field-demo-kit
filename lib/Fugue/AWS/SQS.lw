@@ -1,6 +1,0 @@
-export
-  module SQS as .
-  module Queue as Queue
-
-import Fugue.AWS.SQS.Queue as Queue
-import Fugue.Core.AWS.SQS as SQS

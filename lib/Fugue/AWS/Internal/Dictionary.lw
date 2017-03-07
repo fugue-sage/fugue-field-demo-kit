@@ -1,7 +1,0 @@
-export
-  toList
-
-# Convert a Dictionary into a List of key, value pairs.
-fun toList(d: Dictionary<a>) -> List<(String, a)>:
-  let get: fun(k): case Dictionary.lookup(k, d) of | Optional v -> v
-  List.map(fun(k): (k, get(k)), Dictionary.keys(d))

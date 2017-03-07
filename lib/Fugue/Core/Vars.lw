@@ -1,5 +1,0 @@
-# Vars support for Ludwig.
-
-type Password:
-  | PlainText {password: String}
-  | VarsKey {key: String}

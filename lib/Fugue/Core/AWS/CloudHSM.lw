@@ -1,5 +1,0 @@
-import Fugue.Core.AWS.Common as .
-
-type Hapg:
-  | Hapg NotImplemented
-

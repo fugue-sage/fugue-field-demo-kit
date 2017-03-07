@@ -1,8 +1,0 @@
-export
-  module DynamoDB as .
-  module Projection as Projection
-  module Table as Table
-
-import Fugue.AWS.DynamoDB.Projection as Projection
-import Fugue.AWS.DynamoDB.Table as Table
-import Fugue.Core.AWS.DynamoDB as DynamoDB

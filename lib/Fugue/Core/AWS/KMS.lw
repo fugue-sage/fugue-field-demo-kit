@@ -1,5 +1,0 @@
-import Fugue.Core.AWS.Common as .
-
-type Key:
-  | Key ExternalOnly
-

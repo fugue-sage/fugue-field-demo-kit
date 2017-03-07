@@ -1,9 +1,0 @@
-import Fugue.AWS.AutoScaling as AutoScaling
-import Fugue.AWS.SNS as SNS
-import Fugue.Core.AWS.CloudWatch as CloudWatch
-
-fun scale(policy: AutoScaling.ScalingPolicy) -> CloudWatch.Action:
-  CloudWatch.ScalingPolicy(policy)
-
-fun notifyTopic(topic: SNS.Topic) -> CloudWatch.Action:
-  CloudWatch.Topic(topic)

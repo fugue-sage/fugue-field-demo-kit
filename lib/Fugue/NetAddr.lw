@@ -1,8 +1,0 @@
-export
-  type Cidr.Cidr
-  type IpAddress.IpAddress
-  module Cidr as Cidr
-  module IpAddress as IpAddress
-
-import Fugue.NetAddr.Cidr as Cidr
-import Fugue.NetAddr.IpAddress as IpAddress
