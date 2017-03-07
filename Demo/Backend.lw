@@ -67,7 +67,7 @@ fun new {
     loadBalancerName: name,
     subnets: network.publicSubnets,
     healthCheck: ELB.HealthCheck.tcp {
-      port: 80,
+      port: 3000,
       interval: 15,
       timeout: 3,
       unhealthyThreshold: 3,
@@ -80,7 +80,7 @@ fun new {
   let listener: ELB.Listener.new {
     protocol: ELB.HTTP,
     loadBalancerPort: 80,
-    instancePort: 80
+    instancePort: 3000
   }
   let ami: case region of
     | AWS.Us-east-1      -> "ami-b7b366d7"
