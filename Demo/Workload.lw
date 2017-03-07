@@ -1,0 +1,116 @@
+export
+  type Workload
+  new
+
+import Fugue.AWS.AutoScaling as AutoScaling
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS as AWS
+import Fugue.AWS.ELB as ELB
+import Fugue.AWS.Pattern.Network as Network
+import Fugue.AWS.DynamoDB as DynamoDB
+
+type Workload<a>:
+  sg: EC2.SecurityGroup
+  asg: AutoScaling.AutoScalingGroup
+  lc: AutoScaling.LaunchConfiguration
+  elb: ELB.LoadBalancer
+  listener: ELB.Listener
+  network: Network.Network
+  ddb: DynamoDB.Table
+
+fun new {
+      name: String,
+      region: AWS.Region
+    } -> Workload<a>:
+  let network: Network.new {
+    name: name,
+    region: region,
+    cidr: "10.0.0.0/16",
+    publicSubnets: [
+      (AWS.A, "10.0.1.0/24"),
+      (AWS.B, "10.0.2.0/24"),
+    ],
+    privateSubnets: [],
+  }
+  let sg: EC2.SecurityGroup.new {
+    description: "WorkloadSecurityGroup",
+    ipPermissionsEgress: None,
+    ipPermissions: [
+        EC2.IpPermission.ssh(EC2.IpPermission.Target.all),
+        EC2.IpPermission.http(EC2.IpPermission.Target.all)
+        ],
+    tags: [AWS.tag("Name", name)],
+    vpc: network.vpc
+  }
+
+  let asg: AutoScaling.AutoScalingGroup.new {
+    subnets: network.publicSubnets,
+    minSize: 4,
+    maxSize: 4,
+    defaultCooldown: 300,
+    healthCheckType: AutoScaling.Ec2,
+    launchConfiguration: lc,
+    tags: [AWS.tag("Name", name)],
+    terminationPolicies: [AutoScaling.ClosestToNextInstanceHour],
+    enabledMetrics: [
+      AutoScaling.GroupInServiceInstances,
+      AutoScaling.GroupTotalInstances
+    ]
+  }
+  let ddb: DynamoDB.Table.new {
+    name: name ++"-table",
+    attributes: {"PropertyName": DynamoDB.S},
+    schema: {"PropertyName": DynamoDB.HASH},
+    provisionedThroughput: {
+      read: 10,
+      write: 10,
+    },
+    region: region,
+  }
+
+
+  let lc: AutoScaling.LaunchConfiguration.new {
+    image: ami,
+    securityGroups: [sg],
+    instanceType: EC2.M3_medium,
+    associatePublicIpAddress: True
+  }
+
+  let elb: ELB.LoadBalancer.new {
+    loadBalancerName: name,
+    subnets: network.publicSubnets,
+    healthCheck: ELB.HealthCheck.tcp {
+      port: 80,
+      interval: 15,
+      timeout: 3,
+      unhealthyThreshold: 3,
+      healthyThreshold: 3
+      },
+    securityGroups: [sg],
+    listeners: [listener],
+    tags: [AWS.tag("Name", name)],
+  }
+
+
+  let listener: ELB.Listener.new {
+    protocol: ELB.HTTP,
+    loadBalancerPort: 80,
+    instancePort: 80
+  }
+
+
+  let ami: case region of
+    | AWS.Us-east-1      -> "ami-b7b366d7"
+    | AWS.Us-west-1      -> "ami-b7b366d7"
+    | AWS.Us-west-2      -> "ami-b7b366d7"
+    | AWS.Eu-west-1      -> "ami-b7b366d7"
+    | _	                 -> AWS.Region.toString(region) ++ " is not supported."
+  {
+    sg: sg,
+    elb: elb,
+    asg: asg,
+    listener: listener,
+    lc: lc,
+    network: network,
+    ddb: ddb
+  }
