@@ -8,6 +8,10 @@ There are Staging and Development compositions that only stand up VPCs with thos
 
 3/7/17 Note: Dev-sam, Dev-lisa, Dev-hector have been removed.
 
+### Policy
+
+You will need to update the Policy.lw file with your own accounts. The broader Fugue/System/Policy.lw file has been included as a reference for different permissions and functions.
+
 ### HIPAA Validations
 
 The HIPAA validations have been moved to the top-level directory so they can be more easy run. 
