@@ -23,7 +23,7 @@ fun new {
       network: Network.Network
     } -> Backend<a>:
   let sg: EC2.SecurityGroup.new {
-    description: "WorkloadSecurityGroup",
+    description: "Backend Security Group",
     ipPermissionsEgress: None,
     ipPermissions: [
         EC2.IpPermission.ssh(EC2.IpPermission.Target.all),

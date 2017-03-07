@@ -2,6 +2,7 @@ composition
 
 import Demo.Backend as Backend
 import Fugue.AWS as AWS
+import Fugue.AWS.Pattern.Network as Network
 
 demo-region: AWS.Us-west-2
 
@@ -21,4 +22,3 @@ my-elb-asg-ddb: Backend.new {
     region: demo-region,
     network: demo-network
 }
-
