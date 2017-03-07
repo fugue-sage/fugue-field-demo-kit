@@ -12,3 +12,12 @@ There are two loose storylines that can be the basis of a demo narrative.
 
 2. You are managing environments for a development project with separate workloads for Development, Testing, Staging, and Production. The Production.lw composition is exactly like FugueDemo.lw but with better names of resources. Since there are currently some issues running the exact Production.lw workload multiple times, the Development, Testing, and Staging compositions are just VPC with an SG. 
 
+### Compositions
+
+There are Staging and Development compositions that only stand up VPCs with those names. The FugueDemo and Production compositions will stand up the full suite of resources for the usual demo.
+
+3/7/17 Note: Dev-sam, Dev-lisa, Dev-hector have been removed.
+
+### HIPAA Validations
+
+For the HIPAA validations to work properly, they need to be in the compiler's search path. Probably the easiest thing to do here is simply copy the hipaa/Fugue/HIPAA directory to /opt/Fugue/HIPAA on your local machine. 
