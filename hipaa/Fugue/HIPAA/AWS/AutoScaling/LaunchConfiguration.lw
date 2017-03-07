@@ -4,7 +4,7 @@ export
 import Fugue.AWS as AWS
 import Fugue.AWS.AutoScaling as AutoScaling
 import Fugue.AWS.IAM as IAM
-import Fugue.AWS.Internal.Validation as V
+import Ludwig.Validation as V
 import Fugue.HIPAA.AWS.EC2 as EC2
 
 AutoScaling.LaunchConfiguration new {
@@ -21,11 +21,11 @@ AutoScaling.LaunchConfiguration new {
                                   placementTenancy: Optional<EC2.Tenancy>,
                                   image: String
                                 }:
-  let valid: V.concat [
+  let valid: V.join [
     validateInstanceType(instanceType)
   ]
   case valid of
-    | V.Fail err -> error("HIPAA: " ++ err)
+    | V.Failure err -> error("HIPAA: " ++ err)
     | V.Success  -> AutoScaling.LaunchConfiguration.new {
                       keyName: keyName,
                       securityGroups: securityGroups,
@@ -45,4 +45,4 @@ V.Validation validateInstanceType(EC2.InstanceType instanceType):
     V.Success
   else
     let name: EC2.InstanceType.toString(instanceType)
-    V.Fail("The instance type " ++ name ++ " does not support dedicated instances, which are required by AWS HIPAA guidelines")
+    V.Failure("The instance type " ++ name ++ " does not support dedicated instances, which are required by AWS HIPAA guidelines")

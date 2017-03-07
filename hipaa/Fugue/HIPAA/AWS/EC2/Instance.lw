@@ -4,7 +4,7 @@ export
 import Fugue.AWS as AWS
 import Fugue.AWS.EC2 as EC2
 import Fugue.AWS.IAM as IAM
-import Fugue.AWS.Internal.Validation as V
+import Ludwig.Validation as V
 import Ludwig.External as E
 
 EC2.Instance new {
@@ -24,12 +24,12 @@ EC2.Instance new {
                instanceInitiatedShutdownBehavior: Optional<EC2.InstanceShutdownBehavior>,
                userData: Optional<String>
              }:
-  let valid: V.concat [
+  let valid: V.join [
     validateDedicatedInstances(subnet),
     validateInstanceType(instanceType),
   ]
   case valid of
-    | V.Fail err -> error("HIPAA: " ++ err)
+    | V.Failure err -> error("HIPAA: " ++ err)
     | V.Success  -> EC2.Instance.new {
                       keyName: keyName,
                       instanceType: instanceType,
@@ -63,11 +63,11 @@ V.Validation validateDedicatedInstances(EC2.Subnet subnet):
       case vpc.(EC2.Vpc).instanceTenancy of
         | Optional EC2.Dedicated   -> V.Success
         | Optional EC2.HostTenancy -> V.Success
-        | _                        -> V.Fail("Dedicated instances are required by published HIPAA guidelines.")
+        | _                        -> V.Failure("Dedicated instances are required by published HIPAA guidelines.")
 
 V.Validation validateInstanceType(EC2.InstanceType instanceType):
   if EC2.InstanceType.supportsDedicatedInstances(instanceType) then
     V.Success
   else
     let name: EC2.InstanceType.toString(instanceType)
-    V.Fail("The instance type " ++ name ++ " does not support dedicated instances, which are required by AWS HIPAA guidelines")
+    V.Failure("The instance type " ++ name ++ " does not support dedicated instances, which are required by AWS HIPAA guidelines")

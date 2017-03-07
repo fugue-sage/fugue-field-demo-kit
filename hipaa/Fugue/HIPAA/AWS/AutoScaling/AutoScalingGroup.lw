@@ -4,7 +4,7 @@ export
 import Fugue.AWS as AWS
 import Fugue.AWS.AutoScaling as AutoScaling
 import Fugue.AWS.ELB as ELB
-import Fugue.AWS.Internal.Validation as V
+import Ludwig.Validation as V
 import Fugue.HIPAA.AWS.EC2 as EC2
 
 AutoScaling.AutoScalingGroup new {
@@ -21,11 +21,11 @@ AutoScaling.AutoScalingGroup new {
                                subnets: List<EC2.Subnet>,
                                loadBalancers: Optional<List<ELB.LoadBalancer>>
                              }:
-  let valid: V.concat [
+  let valid: V.join [
     validateDedicatedInstances(subnets, launchConfiguration)
   ]
   case valid of
-    | V.Fail err -> error("HIPAA: " ++ err)
+    | V.Failure err -> error("HIPAA: " ++ err)
     | V.Success  -> AutoScaling.AutoScalingGroup.new {
                       minSize: minSize,
                       maxSize: maxSize,
@@ -44,7 +44,7 @@ AutoScaling.AutoScalingGroup new {
 V.Validation validateDedicatedInstances(List<EC2.Subnet> subnets, AutoScaling.LaunchConfiguration lc):
   let subnet: List.head(subnets)
   if Optional.isNone(subnet) then
-    V.Fail("At least one subnet must be specified")
+    V.Failure("At least one subnet must be specified")
   else
     let vpc: case subnet of | Optional s -> s.(EC2.Subnet).vpc
     case vpc.(EC2.Vpc).instanceTenancy of
@@ -54,4 +54,4 @@ V.Validation validateDedicatedInstances(List<EC2.Subnet> subnets, AutoScaling.La
                                     case tenancy of
                                       | Optional EC2.Dedicated   -> V.Success
                                       | Optional EC2.HostTenancy -> V.Success
-                                      | _                        -> V.Fail("Dedicated instances are required by published HIPAA guidelines")
+                                      | _                        -> V.Failure("Dedicated instances are required by published HIPAA guidelines")
