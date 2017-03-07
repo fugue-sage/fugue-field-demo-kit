@@ -1,0 +1,342 @@
+# This module provides the basic system types for Fugue's RBAC system,
+# as well as convenience functions and values to make writing RBAC
+# policies even easier.
+#
+# RBAC policy answers questions concerning authorization like, 
+# "how does Fugue know who I'm talking to?" or "how do I prove who I am?"
+# For example, if Alice issues `fugue run`,
+# how does the Fugue conductor know that it's really Alice and not Bob?
+# Included in this policy are rules that help answer questions like
+# "what is a user allowed to do?"
+# 
+# Some helpful terms and definitions with regards to RBAC policy include:
+# A principal is a user, group, or role. It's the "who"
+# An action is an operation that a principal can perform
+# A subject is the target of an action. It's the direct object of the action
+# A rule binds a principal, an action, and a subject together
+# A policy is a collection of rules
+#
+# A simple example of a Fugue RBAC Policy looks like this:
+#
+#     # Alice can manage the account table.
+#     aliceAcctTable: accountTableRules {
+#       principals: [alice],
+#       actions: allAccountTableActions
+#     }
+#     
+#     # Alice and Bob can see what's running and process history in
+#     # all accounts, but can't change them.
+#     readOnlyAccountRules: accountRules {
+#       principals: [
+#         alice,
+#         bob,
+#       ],
+#       accounts: [AllAccounts],
+#       actions: [
+#         AccountStatusProcess,
+#         AccountHistoryProcess,
+#       ]
+#     }
+#
+# In this example, Alice is permitted to modify the Conductor's
+# account table, and both Bob and Alice are permitted "read only"
+# access to all accounts.
+
+############################################
+# Functions to easily build lists of rules
+############################################
+
+# Given a list of principals and a list of account table actions,
+# return a list of rules with the subject set to the AccountTable.
+#
+# Example:
+#
+#     # Alice can manage the account table
+#     aliceAcctTable: accountTableRules {
+#       principals: [alice],
+#       actions: allAccountTableActions
+#     }
+#     
+# @arg principals The list of principals for the generated rules.
+# @arg actions The list of actions each principal will be allowed in
+# the generated rules.
+# @return A list of rules, where the subject is the AccountTable, and
+# the principals and actions are those given in the preceding
+# arguments.
+fun accountTableRules {
+    principals: List<Principal>,
+    actions: List<AccountTableAction>
+  } -> List<Rule>:
+  List.map(
+    fun(t): case t of (p, a) -> Rule { principal: p, subject: AccountTable, action: AccountTableAction(a) },
+    List.cartesian-product(principals, actions)
+  )
+
+# Given lists of principals, accounts, and account actions, return a
+# list of rules.
+#
+# Example:
+#
+#     # Alice can manage compositions in an account bound to the name 'fugueAcct'
+#     aliceFugueAcct: accountRules {
+#       principals: [alice],
+#       accounts: [fugueAcct],
+#       actions: allAccountActions,
+#     }
+#     
+# @arg principals The list of principals for the generated rules.
+# @arg accounts The list of accounts to be subjects in the generated rules.
+# @arg actions The list of actions to permit for each principal in each account.
+# @return A list of rules, where the subjects are the given accounts,
+# with each principal allowed each action in each account.
+fun accountRules {
+    principals: List<Principal>,
+    accounts: List<Account>,
+    actions: List<AccountAction> } -> List<Rule>:
+    List.fold(
+      List.concat,
+      [],
+      List.map(fun(a): singleAccountRules { principals: principals, account: a, actions: actions }, accounts)
+    )
+
+# Given a list of principals, an account, and a list of account actions, return a list of rules.
+#
+# Example:
+#
+#     # Alice can manage compositions in an account bound to the name 'fugueAcct'
+#     aliceFugueAcct: accountRules {
+#       principals: [alice],
+#       account: fugueAcct,
+#       actions: allAccountActions
+#     }
+#     
+# @arg principals The list of principals for the generated rules.
+# @arg account The account to make the subject of the generated rules.
+# @arg actions The list of actions to permit for each principal in the given account.
+# @return A list of rules, where the subject is the given account,
+# with each principal allowed each action in the account.
+fun singleAccountRules {
+    principals: List<Principal>,
+    account: Account,
+    actions: List<AccountAction> } -> List<Rule>:
+    List.map(
+      fun(t): case t of (p, a) -> Rule{principal: p, subject: AccountType(account), action: AccountAction(a) },
+      List.cartesian-product(principals, actions)
+    )
+
+# Given a list of principals and a list of RBAC actions, return a list
+# of rules with the subject set to the RbacMetadata.
+#
+# Example:
+#
+#     # Alice can view users in the Conductor RBAC system.
+#     aliceFugueAcct: accountRules {
+#       principals: [alice],
+#       actions: [RbacListUsers]
+#     }
+#     
+# @arg principals The list of principals for the generated rules.
+# @arg actions The list of actions to permit in the generated rules.
+# @return A list of rules, where the subject is the Conductor's RBAC
+# rules (RbacMetadata), with each principal allowed the given actions
+# against the RbacMetadata subject.
+fun rbacRules {
+    principals: List<Principal>,
+    actions: List<RbacAction> } -> List<Rule>:
+    List.map(
+      fun(t): case t of (p, a) -> Rule{principal: p, subject: RbacMetadata, action: RbacAction(a) },
+      List.cartesian-product(principals, actions)
+    )
+
+
+###############
+# Handy values
+###############
+
+# This set of actions provides all account actions. It is essentially
+# full read/write access to the Conductor process table. This is
+# effectively a superuser.
+allAccountActions: [
+  AccountRunProcess,
+  AccountUpdateProcess,
+  AccountKillProcess,
+  AccountPropertyProcess,
+  AccountResumeProcess,
+  AccountSuspendProcess,
+  AccountHistoryProcess,
+  AccountStatusProcess,
+  AccountReleaseProcess
+  ]
+
+# This set of actions provides all account table actions. With this
+# set of actions, a user has full read/write access to the table of
+# accounts known by the Conductor.
+allAccountTableActions: [
+  AccountTableAdd,
+  AccountTableList,
+  AccountTableUpdate,
+  AccountTableDelete
+  ]
+
+# This set of actions provides all RBAC policy management
+# actions. With this set of actions, a user has full read/write access
+# to the RBAC policy on the Conductor.
+allRbacActions: [
+  RbacListUsers,
+  RbacAttachPolicy,
+  RbacGetPolicy,
+  RbacDetachPolicy,
+  RbacRotateCredential
+  ]
+
+####################
+# RBAC system types
+####################
+
+# A `Principal` is an entity that can be authorized to perform an
+# operation. They are one of the three key elements of a rule, the
+# other two being an `Action` and a `Subject`.
+#
+# @constructor User A specific user to identify as a principal. When a
+# user is present in a rule, that user is automatically created in the
+# Conductor.
+#
+# @field userId The name of the user being referenced.
+#
+# @constructor AllUsers A special global principal that affects all users.
+type Principal:
+  | User
+      userId: String
+  | AllUsers
+
+# An `Account` is an IaaS provider account known to the
+# Conductor. Such accounts are eligible to host Fugue processes.
+#
+# @constructor Account An account in the Conductor's account table.
+#
+# @field accountId The account ID _as it is known in the
+# Conductor's account table_. This is not the provider account number,
+# but instead the Account ID as assigned to the account when you
+# registered it with `fugue account add`.
+#
+# @constructor AllAccounts A special global account subject.
+type Account:
+  | Account
+      accountId: String
+  | AllAccounts
+
+# A `Subject` is the target of a rule. It is one of the three key
+# elements of a rule, the other two being an `Action` and a
+# `Principal`.
+#
+# @constructor AccountTable The table of accounts in the Conductor
+# (visible with `fugue account list`).
+#
+# @constructor AccountType An `Account` value, either representing a
+# single account (`Account` constructor) or all accounts
+# (`AllAccounts` constructor).
+#
+# @constructor RbacMetadata The RBAC policy data on the Conductor.
+#
+# @constructor AllSubjects A special global subject. Use with caution.
+type Subject:
+  | AccountTable
+  | AccountType Account
+  | RbacMetadata
+  | AllSubjects
+
+# A `Rule` is an authorization for a `Principal` to perform an
+# `Action` on a `Subject`. It is the keystone type of the Fugue RBAC
+# system.
+#
+# @field principal The `Principal` authorized to perform the `Action` on the `Subject`.
+# @field subject The `Subject` to which the rule applies.
+# @field action The `Action` which the rule permits.
+type Rule:
+  | Rule
+      principal: Principal
+      subject: Subject
+      action: Action
+
+# An `Action` is a generic type for an operation that a principal can perform.
+#
+# @constructor AccountAction A valid action for `Account` subjects.
+# @constructor AccountTableAction A valid action for the Conductor's `AccountTable` subject.
+# @constructor RbacAction A valid action for the Conductor's RBAC metadata subject.
+type Action:
+  | AccountAction AccountAction
+  | AccountTableAction AccountTableAction
+  | RbacAction RbacAction
+
+# Actions that can be performed on an `Account` subject, which is an
+# IaaS account registered with the Conductor via `fugue account add`.
+#
+# @constructor AccountRunProcess Permits a principal to run a process
+# in an account (`fugue run`).
+# @constructor AccountUpdateProcess Permits a principal to update a
+# process in an account (`fugue update`).
+# @constructor AccountKillProcess Permits a principal to kill a
+# process in an account (`fugue kill`).
+# @constructor AccountPropertyProcess Permits a principal to read and
+# write process properties in an account (`fugue property`).
+# @constructor AccountResumeProcess Permits a principal to resume a
+# process in an account (`fugue resume`).
+# @constructor AccountSuspendProcess Permits a principal to suspend a
+# process in an account (`fugue suspend`).
+# @constructor AccountHistoryProcess Permits a principal to examine
+# the history of a process in an account (`fugue history`).
+# @constructor AccountStatusProcess Permits a principal to examine the
+# status of a process in an account (`fugue status`).
+# @constructor AccountReleaseProcess Permits a principal to release
+# infrastructure in a process from Fugue management (`fugue release`).
+type AccountAction:
+  | AccountRunProcess
+  | AccountUpdateProcess
+  | AccountKillProcess
+  | AccountPropertyProcess
+  | AccountResumeProcess
+  | AccountSuspendProcess
+  | AccountHistoryProcess
+  | AccountStatusProcess
+  | AccountReleaseProcess
+
+# Actions that can be used to manage the set of IaaS accounts
+# registered with the Conductor via `fugue account`
+# commands. Applicable to the `AccountTable` subject.
+#
+# @constructor AccountTableAdd Permits a principal to add an account
+# to the account table.
+# @constructor AccountTableList Permits a principal to inspect the
+# account table.
+# @constructor AccountTableUpdate Permits a principal to update
+# (modify) an account in the account table.
+# @constructor AccountTableDelete Permits a principal to delete an
+# account from the account table.
+type AccountTableAction:
+  | AccountTableAdd
+  | AccountTableList
+  | AccountTableUpdate
+  | AccountTableDelete
+
+# Actions on the RBAC system itself. Applicable to the `RbacMetadata`
+# subject.
+#
+# @constructor RbacListUsers Permits a principal to list users defined
+# by the attached RBAC policy.
+# @constructor RbacAttachPolicy Permits a principal to attach a policy
+# to the Conductor. Note: Fugue run will accept an RBAC policy composition
+# or even a mixture of RBAC
+# and standard library types but it will have no effect.
+# @constructor RbacGetPolicy Permits a principal to download and
+# examine the policy attached to the Conductor.
+# @constructor RbacDetachPolicy Permits a principal to detach a policy
+# from the Conductor.
+# @constructor RbacRotateCredential Permits a principal to rotate RBAC
+# credentials.
+type RbacAction:
+  | RbacListUsers
+  | RbacAttachPolicy
+  | RbacGetPolicy
+  | RbacDetachPolicy
+  | RbacRotateCredential
+

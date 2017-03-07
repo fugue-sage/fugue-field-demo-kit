@@ -2,12 +2,6 @@
 
 This is  a colleciton of useful Ludwig scripts for demos centralized into one repo. Putting lots of useful compositions in one repo makes running demos easier on both the presenter and audience in minimizing navigation and context-switching.
 
-**NOTE: THESE ARE LIKELY NOT THE LATEST VERSIONS** as they are sourced from http://docs.fugue.co fake book repos. I'll attempt to keep them up-to-date but always look to those individual repos for the true latest.
-
-### Stories
-
-You are managing environments for a development project with separate workloads for Development, Testing, Staging, and Production. The Production.lw composition is exactly like FugueDemo.lw but with better names of resources. Since there are currently some issues running the exact Production.lw workload multiple times, the Development, Testing, and Staging compositions are just VPC with an SG. 
-
 ### Compositions
 
 There are Staging and Development compositions that only stand up VPCs with those names. The FugueDemo and Production compositions will stand up the full suite of resources for the usual demo.
