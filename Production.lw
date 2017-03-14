@@ -21,7 +21,7 @@ prod-app-tag: AWS.tag('Application', 'Fugue Demo App')
 prod-app-network: Network.new {
   name: "prod-network",
   region: prod-app-region,
-  cidr: "10.0.0.0/16",
+  cidr: "10.0.0.0/8",
   publicSubnets: [
     (AWS.A, "10.0.1.0/24"),
     (AWS.B, "10.0.2.0/24"),
@@ -31,16 +31,16 @@ prod-app-network: Network.new {
 
 
 # # DYNAMODB TABLE
-# prod-app-table: DynamoDB.Table.new {
-#   name: "prod-app-table",
-#   attributes: {"PropertyName": DynamoDB.S},
-#   schema: {"PropertyName": DynamoDB.HASH},
-#   provisionedThroughput: {
-#     read: 10,
-#     write: 10,
-#   },
-#   region: prod-app-region,
-# }
+prod-app-table: DynamoDB.Table.new {
+  name: "prod-app-table",
+  attributes: {"PropertyName": DynamoDB.S},
+  schema: {"PropertyName": DynamoDB.HASH},
+  provisionedThroughput: {
+    read: 10,
+    write: 10,
+  },
+  region: prod-app-region,
+}
 
 
 # AUTOSCALING GROUP

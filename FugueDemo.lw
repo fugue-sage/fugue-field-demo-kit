@@ -19,7 +19,7 @@ demo-app-tag: AWS.tag('Application', 'Fugue Demo App')
 
 # Network (VPC)
 demo-app-network: Network.new {
-  name: "prod-network",
+  name: "staging-network",
   region: demo-app-region,
   cidr: "10.0.0.0/16",
   publicSubnets: [
@@ -31,16 +31,16 @@ demo-app-network: Network.new {
 
 
 # # DYNAMODB TABLE
-# demo-app-table: DynamoDB.Table.new {
-#   name: "demo-app-table",
-#   attributes: {"PropertyName": DynamoDB.S},
-#   schema: {"PropertyName": DynamoDB.HASH},
-#   provisionedThroughput: {
-#     read: 10,
-#     write: 10,
-#   },
-#   region: demo-app-region,
-# }
+demo-app-table: DynamoDB.Table.new {
+  name: "demo-app-table",
+  attributes: {"PropertyName": DynamoDB.S},
+  schema: {"PropertyName": DynamoDB.HASH},
+  provisionedThroughput: {
+    read: 10,
+    write: 10,
+  },
+  region: demo-app-region,
+}
 
 
 # AUTOSCALING GROUP
