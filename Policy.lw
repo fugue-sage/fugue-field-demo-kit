@@ -5,6 +5,8 @@ import Fugue.System.Policy as .
 # Add your default account ID below. You can find this ID by executing
 # `fugue account list`.
 default: Account(accountId: "fugue-1234567890")
+staging: Account(accountId: "staging-1488398672205")
+production: Account(accountId: "production-1488398393996")
 
 alice: User {userId: "alice"}
 
@@ -28,7 +30,7 @@ sam: User {userId: "sam"}
 
 samLimitedAccessDefault: accountRules {
           principals: [sam],
-          accounts: [default],
+          accounts: [staging],
           actions:[AccountRunProcess,
                    AccountKillProcess,
                    AccountUpdateProcess,
