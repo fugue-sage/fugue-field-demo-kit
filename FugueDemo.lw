@@ -50,7 +50,7 @@ demo-app-asg: AutoScaling.AutoScalingGroup.new {
   subnets: demo-app-network.publicSubnets,
   loadBalancers: [demo-app-elb],
   minSize: 4,
-  maxSize: 12,
+  maxSize: 4,
   defaultCooldown: 300,
   healthCheckType: AutoScaling.Ec2,
   launchConfiguration: demo-app-lc,
