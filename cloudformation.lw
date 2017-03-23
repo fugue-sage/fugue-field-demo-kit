@@ -1,0 +1,12 @@
+composition
+
+import Fugue.AWS as AWS
+import Fugue.Core.AWS.Cloudformation as Cloudformation
+
+stack: Cloudformation.Stack{
+  stackName: 'cloudformationDemo',
+  stackPolicy: Cloudformation.Body(String.readFileUtf8('policy.json')),
+  region: AWS.Us-west-2,
+  capabilities: [Cloudformation.IAM],
+  template: Cloudformation.Body(String.readFileUtf8('opsworks.json')),
+}
