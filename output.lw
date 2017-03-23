@@ -1,0 +1,570 @@
+composition
+
+import Fugue.AWS as AWS
+import Fugue.AWS.EC2 as EC2
+
+
+region: AWS.Us-west-2
+
+############################################################
+# DHCP Options
+#   Generated from AWS resource: dopt-a057a4c7
+############################################################
+dopt-a057a4c7: EC2.DhcpOptions.new {
+  region: region,
+}
+
+############################################################
+# DHCP Options
+#   Generated from AWS resource: dopt-5ad7ee3f
+############################################################
+dopt-5ad7ee3f: EC2.DhcpOptions.new {
+  region: region,
+}
+
+############################################################
+# DHCP Options
+#   Generated from AWS resource: dopt-af57a4c8
+############################################################
+dopt-af57a4c8: EC2.DhcpOptions.new {
+  region: region,
+}
+
+############################################################
+# DHCP Options
+#   Generated from AWS resource: dopt-a157a4c6
+############################################################
+dopt-a157a4c6: EC2.DhcpOptions.new {
+  region: region,
+}
+
+############################################################
+# VPC
+#   Generated from AWS resource: vpc-77088713
+############################################################
+vpc-77088713: EC2.Vpc.new {
+  cidrBlock: "172.31.0.0/16",
+  dhcpOptions:     dopt-5ad7ee3f,
+  instanceTenancy: EC2.DefaultTenancy,
+  region: region,
+  tags: [
+    AWS.tag("Name", "default VPC")
+  ],
+}
+
+############################################################
+# Subnet
+#   Generated from AWS resource: subnet-3158ac69
+############################################################
+subnet-3158ac69: EC2.Subnet.new {
+  availabilityZone: AWS.C,
+  cidrBlock: "172.31.0.0/20",
+  defaultForAz: True,
+  mapPublicIpOnLaunch: True,
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Subnet
+#   Generated from AWS resource: subnet-2444e552
+############################################################
+subnet-2444e552: EC2.Subnet.new {
+  availabilityZone: AWS.B,
+  cidrBlock: "172.31.32.0/20",
+  defaultForAz: True,
+  mapPublicIpOnLaunch: True,
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Subnet
+#   Generated from AWS resource: subnet-959917f1
+############################################################
+subnet-959917f1: EC2.Subnet.new {
+  availabilityZone: AWS.A,
+  cidrBlock: "172.31.16.0/20",
+  defaultForAz: True,
+  mapPublicIpOnLaunch: True,
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-aecfd4d6
+############################################################
+sg-aecfd4d6: EC2.SecurityGroup.new {
+  description: "AWS Flow Ruby server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 1,
+      ipProtocol: "udp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(65535, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 0,
+      ipProtocol: "icmp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(443, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-0cccd774
+############################################################
+sg-0cccd774: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks blank server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-35cdd64d
+############################################################
+sg-35cdd64d: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks custom server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 1,
+      ipProtocol: "udp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(65535, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 0,
+      ipProtocol: "icmp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(443, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-c5cbd0bd
+############################################################
+sg-c5cbd0bd: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks database master server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.new {
+      fromPort: 1,
+      ipProtocol: "udp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(65535, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 0,
+      ipProtocol: "icmp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    }
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-ecc9d294
+############################################################
+sg-ecc9d294: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks Default server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-a1ccd7d9
+############################################################
+sg-a1ccd7d9: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks ECS cluster - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-31cbd049
+############################################################
+sg-31cbd049: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks Java-App server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 1,
+      ipProtocol: "udp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(65535, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 0,
+      ipProtocol: "icmp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(443, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-69cad111
+############################################################
+sg-69cad111: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks load balancer - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(443, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-0fcfd477
+############################################################
+sg-0fcfd477: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks Memcached server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 1,
+      ipProtocol: "udp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(65535, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 0,
+      ipProtocol: "icmp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    }
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-a9cfd4d1
+############################################################
+sg-a9cfd4d1: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks Monitoring Ganglia server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 1,
+      ipProtocol: "udp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(65535, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 0,
+      ipProtocol: "icmp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(443, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-6accd712
+############################################################
+sg-6accd712: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks nodejs-App server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 1,
+      ipProtocol: "udp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(65535, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 0,
+      ipProtocol: "icmp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(443, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-4ec9d236
+############################################################
+sg-4ec9d236: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks PHP-App server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 1,
+      ipProtocol: "udp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(65535, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 0,
+      ipProtocol: "icmp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(443, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-3fcbd047
+############################################################
+sg-3fcbd047: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks Rails-App server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 1,
+      ipProtocol: "udp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(65535, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 0,
+      ipProtocol: "icmp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(443, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-abcfd4d3
+############################################################
+sg-abcfd4d3: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks RDP server",
+  ipPermissions: [
+
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-93ced5eb
+############################################################
+sg-93ced5eb: EC2.SecurityGroup.new {
+  description: "AWS OpsWorks Web server - do not change or delete",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 1,
+      ipProtocol: "udp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(65535, EC2.IpPermission.Target.all),
+    EC2.IpPermission.new {
+      fromPort: 0,
+      ipProtocol: "icmp",
+      target: EC2.IpPermission.Target.all,
+      toPort: 65535,
+    },
+    EC2.IpPermission.tcp(443, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-af25e5c9
+############################################################
+sg-af25e5c9: EC2.SecurityGroup.new {
+  description: "default VPC security group",
+  ipPermissions: [
+    EC2.IpPermission.allowAll
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-919d0de9
+############################################################
+sg-919d0de9: EC2.SecurityGroup.new {
+  description: "launch-wizard-1 created 2017-02-03T10:59:19.924-08:00",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-1367ca6a
+############################################################
+sg-1367ca6a: EC2.SecurityGroup.new {
+  description: "launch-wizard-2 created 2016-09-28T10:55:42.806-07:00",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(8080, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(443, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Security Group
+#   Generated from AWS resource: sg-0a07a972
+############################################################
+sg-0a07a972: EC2.SecurityGroup.new {
+  description: "launch-wizard-8 created 2017-01-18T10:00:26.064-08:00",
+  ipPermissions: [
+    EC2.IpPermission.tcp(80, EC2.IpPermission.Target.all),
+    EC2.IpPermission.tcp(22, EC2.IpPermission.Target.all)
+  ],
+  ipPermissionsEgress: [
+    EC2.IpPermission.allowAll
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Route Table
+#   Generated from AWS resource: rtb-2687f442
+############################################################
+rtb-2687f442: EC2.RouteTable.new {
+  routes: [
+    EC2.Route.new {
+      destinationCidrBlock: "0.0.0.0/0",
+      target: EC2.GatewayTarget(EC2.InternetGateway.external("igw-a89384cd", region)),
+    }
+  ],
+  vpc:     vpc-77088713,
+}
+
+############################################################
+# Instance
+#   Generated from AWS resource: i-03167a5e623034042
+############################################################
+i-03167a5e623034042: EC2.Instance.new {
+  blockDeviceMappings: [
+    EC2.InstanceBlockDeviceMapping.new {
+      deviceName: "/dev/sda1",
+      ebs: EC2.EbsInstanceBlockDevice.new {
+        deleteOnTermination: True,
+        volume: EC2.Volume.external("vol-ce11bf46", region),
+      },
+    }
+  ],
+  ebsOptimized: False,
+  image: "ami-d732f0b7",
+  instanceType: EC2.T2_micro,
+  keyName: "sageDebugKey",
+  monitoring: False,
+  securityGroups: [
+    sg-1367ca6a
+  ],
+  sourceDestCheck: True,
+  subnet:     subnet-959917f1,
+  tags: [
+    AWS.tag("Name", "Jenkins")
+  ],
+}
+
