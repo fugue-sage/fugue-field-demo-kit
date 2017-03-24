@@ -13,11 +13,8 @@ import Fugue.AWS.Pattern.Network as Network
 # Region
 demo-app-region: AWS.Us-west-2
 
-
 # Tags
 demo-app-tag: AWS.tag('Application', 'Fugue Demo App')
-
-#demo-my-existing-vpc: EC2.Vpc.external("vpc-83838383")
 
 # Network (VPC)
 demo-app-network: Network.new {
@@ -30,7 +27,6 @@ demo-app-network: Network.new {
   ],
   privateSubnets: [],
 }
-
 
 # # DYNAMODB TABLE
 demo-app-table: DynamoDB.Table.new {

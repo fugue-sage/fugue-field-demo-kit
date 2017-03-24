@@ -3,6 +3,11 @@ composition
 import Fugue.AWS as AWS
 import Fugue.Core.AWS.Cloudformation as Cloudformation
 
+# This composition will lauch the OpsWorks sample CloudFormation 
+# stack template as an example for cases where
+# running CloudFormation expands our service coverage 
+# or gives a user an option for re-using existing config
+
 stack: Cloudformation.Stack{
   stackName: 'cloudformationDemo',
   stackPolicy: Cloudformation.Body(String.readFileUtf8('policy.json')),

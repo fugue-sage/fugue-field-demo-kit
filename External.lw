@@ -1,0 +1,16 @@
+composition
+
+import Fugue.AWS.EC2 as EC2
+import Fugue.AWS as AWS
+
+
+external-vpc: EC2.Vpc.external("vpc-69c8890d", AWS.Us-west-2) #default staging account vpc
+
+external-vpc-sg: EC2.SecurityGroup.new {
+  description: "Allow http/s traffic from the Internet",
+  ipPermissions: [
+    EC2.IpPermission.http(EC2.IpPermission.Target.all),
+    EC2.IpPermission.https(EC2.IpPermission.Target.all),
+  ],
+  vpc: external-vpc
+}
