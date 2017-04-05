@@ -1,5 +1,9 @@
 composition
 
+# This composition is an example of adding a new security group
+# to an existing AWS VPC. 
+
+
 import Fugue.AWS.EC2 as EC2
 import Fugue.AWS as AWS
 

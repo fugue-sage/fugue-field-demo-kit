@@ -1,0 +1,27 @@
+composition
+
+import Fugue.AWS as AWS
+import Fugue.AWS.IAM as IAM
+import Fugue.AWS.Lambda as Lambda
+import Ludwig.Bytes as Bytes
+
+#########################
+# Lambda
+#########################
+exampleLambdaFunction: Lambda.Function.new {
+  functionName: 'exampleFunction',
+  runtime: Lambda.Nodejs4_3,
+  role: IAM.Role.new {
+    roleName: 'lambdaRole',
+    assumeRolePolicyDocument: IAM.Policy.AssumeRole.lambda,
+    rolePolicies: [IAM.Policy.new {
+      policyName: 'lambdaExecute',
+      policyDocument: String.readFileUtf8('lambda/lambda_policy.json')
+    }]
+  },
+  handler: 'exports.myHandler',
+  code: lambdaCode,
+  region: AWS.Us-west-2
+}
+
+lambdaCode: Lambda.CodeZipFile(Bytes.readFile('lambda/lambdaHandler.js.zip'))

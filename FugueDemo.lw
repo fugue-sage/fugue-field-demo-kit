@@ -6,7 +6,6 @@ import Fugue.AWS.DynamoDB as DynamoDB
 import Fugue.AWS.EC2 as EC2
 import Fugue.AWS.ELB as ELB
 import Fugue.AWS.IAM as IAM
-import Fugue.AWS.CloudFormation
 import Fugue.AWS.Pattern.Network as Network
 
 
