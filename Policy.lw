@@ -6,13 +6,13 @@ import Fugue.System.Policy as .
 # `fugue account list`.
 default: Account(accountId: "fugue-1487973234972")
 staging: Account(accountId: "staging-1488398672205")
-production: Account(accountId: "production-1488398393996")
+webteam: Account(accountId: "webteam-1491270485353")
 
 alice: User {userId: "alice"}
 
 aliceLimitedAccessDefault: accountRules {
           principals: [alice],
-          accounts: [default],
+          accounts: [webteam],
           actions:[AccountRunProcess,
                    AccountKillProcess,
                    AccountStatusProcess]}
