@@ -6,7 +6,6 @@ import Fugue.AWS.DynamoDB as DynamoDB
 import Fugue.AWS.EC2 as EC2
 import Fugue.AWS.ELB as ELB
 import Fugue.AWS.IAM as IAM
-import Fugue.AWS.CloudFormation
 import Fugue.AWS.Pattern.Network as Network
 
 
@@ -16,8 +15,6 @@ demo-app-region: AWS.Us-west-2
 
 # Tags
 demo-app-tag: AWS.tag('Application', 'Fugue Demo App')
-
-#demo-my-existing-vpc: EC2.Vpc.external("vpc-83838383")
 
 # Network (VPC)
 demo-app-network: Network.new {
