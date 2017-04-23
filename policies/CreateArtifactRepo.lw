@@ -1,0 +1,7 @@
+composition
+
+import Corp
+
+repo: Corp.ArtifactRepo.new {
+  name: "myFugueArtifacts0000"
+}
